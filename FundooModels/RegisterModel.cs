@@ -13,9 +13,9 @@ namespace FundooModels
         public string LastName { get; set; }
 
         [Required]
-        // [RegularExpression("",ErrorMessage = "Email is not valid. Please enter a valid email address.")
+        [RegularExpression("^[a-z][a-z0-9]{2,}([-.+]{1}[a-z0-9]{3})?[@][a-z0-9]{1,}[.][a-z]{3}([.][a-z]{2,3})?$", ErrorMessage = "Invalid email address. Please enter a valid email address.")]
         public string Email { get; set; }
         [Required]
-        public int Password { get; set; }
+        public string Password { get; set; }
     }
 }

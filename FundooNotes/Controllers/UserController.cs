@@ -1,5 +1,5 @@
-﻿using FundooManager.Interface;
-using FundooModels;
+﻿using FundooModels;
+using FundooManager.Interface;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -22,14 +22,14 @@ namespace FundooNotes.Controllers
         {
             try
             {
-                string message =  this.manager.Register(user);
-                if(message.Equals("Register Successfull"))
+                RegisterModel data =  this.manager.Register(user);
+                if(data!=null)
                 {
-                    return this.Ok(new { Status = true, Message = message });
+                    return this.Ok(new ResponseModel<RegisterModel>{ Status = true, Message = "Registered Succesfully" ,Data = data});
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = message });
+                    return this.BadRequest(new { Status = false, Message = "Email already exist" });
                 }
             }
             catch (Exception ex)
@@ -37,9 +37,28 @@ namespace FundooNotes.Controllers
                 return this.NotFound(new { Status = true, ex.Message });
             }
         }
-        //public IActionResult Index()
-        //{
-        //    return View();
-        //}
+
+        [HttpPost]
+        [Route("api/login")]
+        public IActionResult Login([FromBody] UserCredentialsModel userCredentials)
+        {
+            try
+            {
+                string result = this.manager.Login(userCredentials);
+                if (result.Equals("Logged in successfully"))
+                {
+                    return this.Ok(new ResponseModel<UserCredentialsModel>{ Status = true, Message = result, Data = userCredentials });
+                }
+                else
+                {
+                    return this.BadRequest(new { Status = false, Message = result });
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return this.NotFound(new { Status = true, ex.Message });
+            }
+        }
     }
 }

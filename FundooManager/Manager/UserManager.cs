@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FundooModels;
+using FundooManager.Interface;
+using FundooRepository.Interface;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,11 +14,23 @@ namespace FundooManager.Manager
         {
             this.repository = repository;
         }
-        public string Register(RegisterModel user)
+        public RegisterModel Register(RegisterModel user)
         {
             try
             {
                 return this.repository.Register(user);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public string Login(UserCredentialsModel loginUser)
+        {
+            try
+            {
+                return this.repository.Login(loginUser);
             }
             catch (Exception ex)
             {

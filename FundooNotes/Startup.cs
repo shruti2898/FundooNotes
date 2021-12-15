@@ -10,6 +10,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FundooManager.Interface;
+using FundooManager.Manager;
+using FundooRepository.Repository;
+using FundooRepository.Interface;
 
 namespace FundooNotes
 {
@@ -26,6 +30,8 @@ namespace FundooNotes
         {
             services.AddMvc();
             services.AddDbContext<UserContext>(options => options.UseSqlServer(this.configuration.GetConnectionString("DbConnection")));
+            services.AddTransient<IUserRepository,UserRepository>();
+            services.AddTransient<IUserManager, UserManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,14 +42,14 @@ namespace FundooNotes
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseHttpsRedirection();
             app.UseRouting();
-
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                endpoints.MapControllerRoute(
+                     name: "default",
+                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

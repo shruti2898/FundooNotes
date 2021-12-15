@@ -7,6 +7,7 @@ namespace FundooRepository.Interface
 {
     public interface IUserRepository
     {
-        string Register(RegisterModel user);
+        RegisterModel Register(RegisterModel user);
+        string Login(UserCredentialsModel loginUser);
     }
 }
