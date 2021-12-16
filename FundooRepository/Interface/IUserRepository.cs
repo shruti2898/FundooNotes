@@ -12,5 +12,6 @@ namespace FundooRepository.Interface
         string Login(UserCredentialsModel loginUser);
 
         bool ResetPassword(UserCredentialsModel userCredentials);
+        bool ForgotPassword(string userEmail);
     }
 }

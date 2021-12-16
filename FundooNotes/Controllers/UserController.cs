@@ -83,5 +83,29 @@ namespace FundooNotes.Controllers
                 return this.NotFound(new { Status = true, ex.Message });
             }
         }
+
+        [HttpPost]
+        [Route("api/forgotPassword")]
+        public IActionResult ForgotPassword(string userEmail)
+        {
+
+            try
+            {
+                bool resultForgotPassword = this.manager.ForgotPassword(userEmail);
+                if (resultForgotPassword)
+                {
+                    return this.Ok(new ResponseModel<UserCredentialsModel> { Status = true, Message = $"A link has been sent on your email address- {userEmail}"});
+                }
+                else
+                {
+                    return this.BadRequest(new { Status = false, Message = userEmail + " email does not exist in our system." });
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return this.NotFound(new { Status = true, ex.Message });
+            }
+        }
     }
 }

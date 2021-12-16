@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net.Mail;
 
 namespace FundooRepository.Repository
 {
@@ -35,9 +36,9 @@ namespace FundooRepository.Repository
                     return null;
                 }
             }
-            catch (ArgumentNullException ex)
+            catch (ArgumentNullException exception)
             {
-                throw new Exception(ex.Message);
+                throw new Exception(exception.Message);
             }
         }
 
@@ -61,8 +62,8 @@ namespace FundooRepository.Repository
                     }
                 }
                 else
-                {
-                    return "Incorrect Email";
+                {  
+                    return "Email does not exist in our system";
                 }
             }
             catch (ArgumentNullException ex)
@@ -91,6 +92,65 @@ namespace FundooRepository.Repository
                 }
             }
             catch (ArgumentNullException ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public bool ForgotPassword(string userEmail)
+        {
+            try
+            {
+                var userDetails = this.context.Users.SingleOrDefault(user => user.Email.Equals(userEmail));
+                if (userDetails != null)
+                {
+                    string userName = userDetails.FirstName + " " + userDetails.LastName;
+                    int sendMailSuccess = SendEmail(userEmail, userName);
+
+                    if (sendMailSuccess == 1)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (ArgumentNullException ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+
+
+        public int SendEmail(string emailAddress, string userName)
+        {
+            try
+            {
+                MailMessage sendEmail = new MailMessage();
+                SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
+                sendEmail.From = new MailAddress("shruti160447@gmail.com");
+                
+                sendEmail.To.Add(emailAddress);
+                sendEmail.Subject = "Reset your password";
+                sendEmail.Body = $"Hello {userName}, A password reset for your account was requested. Please click the link below to change your password.";
+
+                smtpServer.Port = 587;
+                smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
+                smtpServer.EnableSsl = true;
+
+                smtpServer.Send(sendEmail);
+                sendEmail.DeliveryNotificationOptions = DeliveryNotificationOptions.OnSuccess;
+
+                int result = ((int)sendEmail.DeliveryNotificationOptions);
+                return result;
+            }
+            catch (Exception ex)
             {
 
                 throw new Exception(ex.Message);
