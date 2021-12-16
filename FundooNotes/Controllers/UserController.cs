@@ -18,11 +18,11 @@ namespace FundooNotes.Controllers
 
         [HttpPost]
         [Route("api/register")]
-        public IActionResult Register([FromBody] RegisterModel user)
+        public async Task<IActionResult> Register([FromBody] RegisterModel user)
         {
             try
             {
-                RegisterModel data =  this.manager.Register(user);
+                RegisterModel data = await this.manager.Register(user);
                 if(data!=null)
                 {
                     return this.Ok(new ResponseModel<RegisterModel>{ Status = true, Message = "Registered Succesfully" ,Data = data});

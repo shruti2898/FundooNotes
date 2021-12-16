@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FundooRepository.Repository
 {
@@ -16,17 +17,17 @@ namespace FundooRepository.Repository
             this.context = context;
         }
 
-        public RegisterModel Register(RegisterModel userDetails)
+        public async Task<RegisterModel> Register(RegisterModel userDetails)
         {
             try
             {
-                bool ifEmailExist = this.context.Users.Any(user => user.Email.Equals(userDetails.Email));
+                bool emailExist = this.context.Users.Any(user => user.Email.Equals(userDetails.Email));
 
-                if (!ifEmailExist)
+                if (!emailExist)
                 {
                     userDetails.Password = PasswordEncryption(userDetails.Password);
                     this.context.Users.Add(userDetails);
-                    this.context.SaveChanges();
+                    await this.context.SaveChangesAsync();
                     return userDetails;
                 }
                 else
@@ -47,7 +48,7 @@ namespace FundooRepository.Repository
                 bool userEmailExist = this.context.Users.Any(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userEmailExist)
                 {
-                    //userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
+                    userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
                     var result = this.context.Users.Where(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword)).Count();
                     if (result == 1)
                     {
@@ -70,7 +71,7 @@ namespace FundooRepository.Repository
             }
         }
 
-        public static string PasswordEncryption(string password)
+        public string PasswordEncryption(string password)
         {
             try
             {

@@ -2,12 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FundooRepository.Interface
 {
     public interface IUserRepository
     {
-        RegisterModel Register(RegisterModel user);
+        Task<RegisterModel> Register(RegisterModel user);
         string Login(UserCredentialsModel loginUser);
     }
 }
