@@ -11,5 +11,7 @@ namespace FundooManager.Interface
         Task<RegisterModel> Register(RegisterModel user);
 
         string Login(UserCredentialsModel loginUser);
+
+        bool ResetPassword(UserCredentialsModel userCredentials);
     }
 }

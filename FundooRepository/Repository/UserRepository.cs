@@ -48,10 +48,11 @@ namespace FundooRepository.Repository
                 bool userEmailExist = this.context.Users.Any(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userEmailExist)
                 {
-                    userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
-                    var result = this.context.Users.Where(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword)).Count();
-                    if (result == 1)
-                    {
+                    userCredentials.UserPassword =  PasswordEncryption(userCredentials.UserPassword);
+                    var result =  this.context.Users.SingleOrDefault(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+                    if (result != null)
+                    {   
+                        
                         return "Logged in successfully";
                     }
                     else
@@ -62,6 +63,31 @@ namespace FundooRepository.Repository
                 else
                 {
                     return "Incorrect Email";
+                }
+            }
+            catch (ArgumentNullException ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public bool ResetPassword(UserCredentialsModel userCredentials)
+        {
+            try
+            {
+                var userInfo = this.context.Users.SingleOrDefault(user => user.Email.Equals(userCredentials.UserEmail));
+                if (userInfo != null)
+                {
+                    userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
+                    userInfo.Password = userCredentials.UserPassword;
+                    this.context.Users.Update(userInfo);
+                    this.context.SaveChanges();
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
             catch (ArgumentNullException ex)

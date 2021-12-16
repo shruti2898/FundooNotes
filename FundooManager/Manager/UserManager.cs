@@ -31,7 +31,19 @@ namespace FundooManager.Manager
         {
             try
             {
-                return this.repository.Login(loginUser);
+                return  this.repository.Login(loginUser);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public bool ResetPassword(UserCredentialsModel userCredentials)
+        {
+            try
+            {
+                return this.repository.ResetPassword(userCredentials);
             }
             catch (Exception ex)
             {
