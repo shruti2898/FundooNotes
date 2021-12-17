@@ -7,6 +7,7 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Mail;
+using Microsoft.EntityFrameworkCore;
 
 namespace FundooRepository.Repository
 {
@@ -22,19 +23,16 @@ namespace FundooRepository.Repository
         {
             try
             {
-                bool emailExist = this.context.Users.Any(user => user.Email.Equals(userDetails.Email));
+                var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
 
-                if (!emailExist)
+                if (emailExist==null)
                 {
                     userDetails.Password = PasswordEncryption(userDetails.Password);
                     this.context.Users.Add(userDetails);
                     await this.context.SaveChangesAsync();
                     return userDetails;
                 }
-                else
-                {
-                    return null;
-                }
+                return null;   
             }
             catch (ArgumentNullException exception)
             {
@@ -42,29 +40,23 @@ namespace FundooRepository.Repository
             }
         }
 
-        public string Login(UserCredentialsModel userCredentials)
+        public async Task<RegisterModel> Login(UserCredentialsModel userCredentials)
         {
             try
             {
-                bool userEmailExist = this.context.Users.Any(user => user.Email.Equals(userCredentials.UserEmail));
-                if (userEmailExist)
+                var userEmailExist= await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+                if (userEmailExist != null)
                 {
                     userCredentials.UserPassword =  PasswordEncryption(userCredentials.UserPassword);
-                    var result =  this.context.Users.SingleOrDefault(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
-                    if (result != null)
+                    var userDetails =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+                    if (userDetails != null)
                     {   
                         
-                        return "Logged in successfully";
+                        return userDetails;
                     }
-                    else
-                    {
-                        return "Incorrect Password";
-                    }
+                    return null;
                 }
-                else
-                {  
-                    return "Email does not exist in our system";
-                }
+                return null;
             }
             catch (ArgumentNullException ex)
             {
@@ -73,23 +65,20 @@ namespace FundooRepository.Repository
             }
         }
 
-        public bool ResetPassword(UserCredentialsModel userCredentials)
+        public async Task<bool> ResetPassword(UserCredentialsModel userCredentials)
         {
             try
             {
-                var userInfo = this.context.Users.SingleOrDefault(user => user.Email.Equals(userCredentials.UserEmail));
+                var userInfo =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userInfo != null)
                 {
                     userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
                     userInfo.Password = userCredentials.UserPassword;
                     this.context.Users.Update(userInfo);
-                    this.context.SaveChanges();
+                    await this.context.SaveChangesAsync();
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
             catch (ArgumentNullException ex)
             {
@@ -98,57 +87,34 @@ namespace FundooRepository.Repository
             }
         }
 
-        public bool ForgotPassword(string userEmail)
+        public async Task<bool> ForgotPassword(string userEmail)
         {
             try
             {
-                var userDetails = this.context.Users.SingleOrDefault(user => user.Email.Equals(userEmail));
+                var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userEmail));
                 if (userDetails != null)
                 {
-                    string userName = userDetails.FirstName + " " + userDetails.LastName;
-                    bool sendMailSuccess = SendEmail(userEmail, userName);
+                    string userDisplayName = userDetails.FirstName + " " + userDetails.LastName;
 
-                    if (sendMailSuccess)
-                    {
-                        return true;
-                    }
+                    MailMessage sendEmail = new MailMessage();
 
-                    return false;
+                    SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
+
+                    sendEmail.From = new MailAddress("shruti160447@gmail.com");
+                    sendEmail.To.Add(userEmail);
+                    sendEmail.Subject = "Reset your password";
+                    sendEmail.Body = $"Hello {userDisplayName}, A password reset for your account was requested. Please click the link below to change your password.";
+
+                    smtpServer.Port = 587;
+                    smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
+                    smtpServer.EnableSsl = true;
+
+                    await smtpServer.SendMailAsync(sendEmail);
+                    return true;
                 }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
             catch (ArgumentNullException ex)
-            {
-
-                throw new Exception(ex.Message);
-            }
-        }
-
-
-        public bool SendEmail(string emailAddress, string userName)
-        {
-            try
-            {
-                MailMessage sendEmail = new MailMessage();
-                SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
-                sendEmail.From = new MailAddress("shruti160447@gmail.com");
-                
-                sendEmail.To.Add(emailAddress);
-                sendEmail.Subject = "Reset your password";
-                sendEmail.Body = $"Hello {userName}, A password reset for your account was requested. Please click the link below to change your password.";
-
-                smtpServer.Port = 587;
-                smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
-                smtpServer.EnableSsl = true;
-
-                smtpServer.Send(sendEmail);
-               
-                return true;
-            }
-            catch (Exception ex)
             {
 
                 throw new Exception(ex.Message);

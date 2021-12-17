@@ -9,9 +9,9 @@ namespace FundooRepository.Interface
     public interface IUserRepository
     {
         Task<RegisterModel> Register(RegisterModel user);
-        string Login(UserCredentialsModel loginUser);
+        Task<RegisterModel> Login(UserCredentialsModel loginUser);
 
-        bool ResetPassword(UserCredentialsModel userCredentials);
-        bool ForgotPassword(string userEmail);
+        Task<bool> ResetPassword(UserCredentialsModel userCredentials);
+        Task<bool> ForgotPassword(string userEmail);
     }
 }

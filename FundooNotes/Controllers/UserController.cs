@@ -40,18 +40,18 @@ namespace FundooNotes.Controllers
 
         [HttpPost]
         [Route("api/login")]
-        public IActionResult Login([FromBody] UserCredentialsModel userCredentials)
+        public async Task<IActionResult> Login([FromBody] UserCredentialsModel userCredentials)
         {
             try
             {
-                string result = this.manager.Login(userCredentials);
-                if (result.Equals("Logged in successfully"))
+                RegisterModel result = await this.manager.Login(userCredentials);
+                if (result != null)
                 {
-                    return this.Ok(new ResponseModel<UserCredentialsModel>{ Status = true, Message = result, Data = userCredentials });
+                    return this.Ok(new ResponseModel<RegisterModel>{ Status = true, Message = "Logged in successfully", Data = result });
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = result });
+                    return this.BadRequest(new { Status = false, Message = "You have entered incorrect email address or incorrect password. Please try again!"});
                 }
             }
             catch (Exception ex)
@@ -63,18 +63,18 @@ namespace FundooNotes.Controllers
 
         [HttpPut]
         [Route("api/resetPassword")]
-        public IActionResult ResetPassword([FromBody] UserCredentialsModel userCredentials)
+        public async Task<IActionResult> ResetPassword([FromBody] UserCredentialsModel userCredentials)
         {
             try
             {
-                bool resultReset = this.manager.ResetPassword(userCredentials);
+                var resultReset = await this.manager.ResetPassword(userCredentials);
                 if (resultReset)
                 {
                     return this.Ok(new ResponseModel<UserCredentialsModel> { Status = true, Message = "Password changed successfully", Data = userCredentials });
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = userCredentials.UserEmail+" email does not exist in our system." });
+                    return this.BadRequest(new { Status = false, Message = "You have entered incorrect email address or incorrect password. Please try again!" });
                 }
             }
             catch (Exception ex)
@@ -86,15 +86,15 @@ namespace FundooNotes.Controllers
 
         [HttpPost]
         [Route("api/forgotPassword")]
-        public IActionResult ForgotPassword(string userEmail)
+        public async Task<IActionResult> ForgotPassword(string userEmail)
         {
 
             try
             {
-                bool resultForgotPassword = this.manager.ForgotPassword(userEmail);
+                var resultForgotPassword = await this.manager.ForgotPassword(userEmail);
                 if (resultForgotPassword)
                 {
-                    return this.Ok(new ResponseModel<UserCredentialsModel> { Status = true, Message = $"A link has been sent on your email address- {userEmail}"});
+                    return this.Ok(new { Status = true, Message = $"A link has been sent on your email address- {userEmail}"});
                 }
                 else
                 {

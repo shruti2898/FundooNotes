@@ -27,11 +27,11 @@ namespace FundooManager.Manager
             }
         }
 
-        public string Login(UserCredentialsModel loginUser)
+        public async Task<RegisterModel> Login(UserCredentialsModel loginUser)
         {
             try
             {
-                return  this.repository.Login(loginUser);
+                return await this.repository.Login(loginUser);
             }
             catch (Exception ex)
             {
@@ -39,22 +39,22 @@ namespace FundooManager.Manager
             }
         }
 
-        public bool ResetPassword(UserCredentialsModel userCredentials)
+        public async Task<bool> ResetPassword(UserCredentialsModel userCredentials)
         {
             try
             {
-                return this.repository.ResetPassword(userCredentials);
+                return await this.repository.ResetPassword(userCredentials);
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
-        public bool ForgotPassword(string userEmail)
+        public async Task<bool> ForgotPassword(string userEmail)
         {
             try
             {
-                return this.repository.ForgotPassword(userEmail);
+                return await this.repository.ForgotPassword(userEmail);
             }
             catch (Exception ex)
             {

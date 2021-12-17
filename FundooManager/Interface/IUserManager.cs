@@ -10,10 +10,10 @@ namespace FundooManager.Interface
     {
         Task<RegisterModel> Register(RegisterModel user);
 
-        string Login(UserCredentialsModel loginUser);
+        Task<RegisterModel> Login(UserCredentialsModel loginUser);
 
-        bool ResetPassword(UserCredentialsModel userCredentials);
+        Task<bool> ResetPassword(UserCredentialsModel userCredentials);
 
-        bool ForgotPassword(string userEmail);
+        Task<bool> ForgotPassword(string userEmail);
     }
 }
