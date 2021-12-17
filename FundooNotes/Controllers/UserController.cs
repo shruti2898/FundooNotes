@@ -74,7 +74,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = "You have entered incorrect email address or incorrect password. Please try again!" });
+                    return this.BadRequest(new { Status = false, Message = $"{userCredentials.UserEmail} email address does not exist in our system. Please try again!" });
                 }
             }
             catch (Exception ex)
