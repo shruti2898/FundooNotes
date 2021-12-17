@@ -106,9 +106,9 @@ namespace FundooRepository.Repository
                 if (userDetails != null)
                 {
                     string userName = userDetails.FirstName + " " + userDetails.LastName;
-                    int sendMailSuccess = SendEmail(userEmail, userName);
+                    bool sendMailSuccess = SendEmail(userEmail, userName);
 
-                    if (sendMailSuccess == 1)
+                    if (sendMailSuccess)
                     {
                         return true;
                     }
@@ -128,7 +128,7 @@ namespace FundooRepository.Repository
         }
 
 
-        public int SendEmail(string emailAddress, string userName)
+        public bool SendEmail(string emailAddress, string userName)
         {
             try
             {
@@ -145,10 +145,8 @@ namespace FundooRepository.Repository
                 smtpServer.EnableSsl = true;
 
                 smtpServer.Send(sendEmail);
-                sendEmail.DeliveryNotificationOptions = DeliveryNotificationOptions.OnSuccess;
-
-                int result = ((int)sendEmail.DeliveryNotificationOptions);
-                return result;
+               
+                return true;
             }
             catch (Exception ex)
             {
