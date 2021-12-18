@@ -8,10 +8,10 @@ namespace FundooRepository.Repository
 {
     public class NotesRepository : INotesRepository
     {
-        private readonly NotesContext contextNotes;
-        public NotesRepository(NotesContext contextNotes)
+        private readonly UserContext noteContext;
+        public NotesRepository(UserContext noteContext)
         {
-            this.contextNotes = contextNotes;
+            this.noteContext = noteContext;
         }
     }
 }

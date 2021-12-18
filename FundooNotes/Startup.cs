@@ -29,9 +29,11 @@ namespace FundooNotes
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddDbContext<UserContext>(options => options.UseSqlServer(this.configuration.GetConnectionString("DbConnection")));
+            services.AddDbContextPool<UserContext>(options => options.UseSqlServer(this.configuration.GetConnectionString("DbConnection")));
             services.AddTransient<IUserRepository,UserRepository>();
             services.AddTransient<IUserManager, UserManager>();
+            services.AddTransient<INotesRepository, NotesRepository>();
+            services.AddTransient<INotesManager, NotesManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

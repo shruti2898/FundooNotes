@@ -10,7 +10,7 @@ namespace FundooModels
     public class NotesModel
     {
         [Key]
-        public int NoteUserId { get; set; }
+        public int NotesId { get; set; }
         public string NoteTitle { get; set; }
         public string NoteDescription { get; set; }
         public string NoteReminder { get; set; }
