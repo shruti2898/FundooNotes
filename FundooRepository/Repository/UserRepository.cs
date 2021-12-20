@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
+using Experimental.System.Messaging;
 
 namespace FundooRepository.Repository
 {
@@ -103,8 +104,9 @@ namespace FundooRepository.Repository
                     sendEmail.From = new MailAddress("shruti160447@gmail.com");
                     sendEmail.To.Add(userEmail);
                     sendEmail.Subject = "Reset your password";
-                    sendEmail.Body = $"Hello {userDisplayName}, A password reset for your account was requested. Please click the link below to change your password.";
-
+                    SendMSMQ();
+                    // sendEmail.Body = $"Hello {userDisplayName}, A password reset for your account was requested. Please click the link below to change your password.";
+                    sendEmail.Body = ReceiveMSMQ();
                     smtpServer.Port = 587;
                     smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
                     smtpServer.EnableSsl = true;
@@ -119,6 +121,32 @@ namespace FundooRepository.Repository
 
                 throw new Exception(ex.Message);
             }
+        }
+
+        public void SendMSMQ()
+        {
+            MessageQueue messageQueue;
+            
+            if (MessageQueue.Exists(@".\Private$\Fundoo"))
+            {
+                messageQueue = new MessageQueue(@".\Private$\Fundoo");
+            }
+            else
+            {
+                messageQueue = MessageQueue.Create(@".\Private$\Fundoo");
+            }
+            messageQueue.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
+            string body = "This for testing SMTP main for Gmail";
+            messageQueue.Label = "Mail Body";
+            messageQueue.Send(body);
+        }
+
+        public string ReceiveMSMQ()
+        {
+            MessageQueue messageQueue = new MessageQueue(@".\Private$\Fundoo");
+            var receiveMessage = messageQueue.Receive();
+            receiveMessage.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
+            return receiveMessage.Body.ToString();
         }
 
         public string PasswordEncryption(string password)

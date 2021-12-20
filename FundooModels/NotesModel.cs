@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace FundooModels
 {
-    public class NotesModel
+    public class NotesModel 
     {
         [Key]
         public int NotesId { get; set; }
@@ -27,5 +28,6 @@ namespace FundooModels
         [ForeignKey("RegisterModel")]
         public int UserId { get; set; }
         public virtual RegisterModel RegisterModel { get; set; }
+
     }
 }

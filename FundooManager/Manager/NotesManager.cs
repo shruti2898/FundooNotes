@@ -1,4 +1,5 @@
 ﻿using FundooManager.Interface;
+using FundooModels;
 using FundooRepository.Interface;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,31 @@ namespace FundooManager.Manager
         public NotesManager(INotesRepository notesRepository)
         {
             this.notesRepository = notesRepository;
+        }
+
+        public NotesModel AddNotes(NotesModel note)
+        {
+            try
+            {
+                return this.notesRepository.AddNotes(note);
+            }
+            catch (Exception e)
+            {
+
+                throw new Exception(e.Message);
+            }
+        }
+        public bool ChangeColor(int noteId, string color)
+        {
+            try
+            {
+                return this.notesRepository.ChangeColor(noteId, color);
+            }
+            catch (Exception e)
+            {
+
+                throw new Exception(e.Message);
+            }
         }
     }
 }
