@@ -30,14 +30,14 @@ namespace FundooRepository.Repository
             {
                 var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
 
-                if (emailExist==null)
+                if (emailExist == null)
                 {
                     userDetails.Password = PasswordEncryption(userDetails.Password);
                     this.context.Users.Add(userDetails);
                     await this.context.SaveChangesAsync();
                     return userDetails;
                 }
-                return null;   
+                return null;
             }
             catch (ArgumentNullException exception)
             {
@@ -49,18 +49,27 @@ namespace FundooRepository.Repository
         {
             try
             {
-                var userEmailExist= await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+                var userEmailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userEmailExist != null)
                 {
+<<<<<<< HEAD
                     userCredentials.UserPassword =  PasswordEncryption(userCredentials.UserPassword);
                     var userDetails =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+=======
+                    userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
+                    var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+>>>>>>> User
 
                     ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configuration["RedisServer"]);
                     IDatabase database = multiplexer.GetDatabase();
                     database.StringSet(key: "User ID", userDetails.UserId.ToString());
                     database.StringSet(key: "First Name", userDetails.FirstName);
                     database.StringSet(key: "Last Name", userDetails.LastName);
+<<<<<<< HEAD
                     
+=======
+
+>>>>>>> User
                     if (userDetails != null)
                     {
                         return userDetails;
@@ -80,7 +89,7 @@ namespace FundooRepository.Repository
         {
             try
             {
-                var userInfo =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+                var userInfo = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userInfo != null)
                 {
                     userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
@@ -134,7 +143,11 @@ namespace FundooRepository.Repository
         public void SendMSMQ(string userDisplayName)
         {
             MessageQueue messageQueue;
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> User
             if (MessageQueue.Exists(@".\Private$\Fundoo"))
             {
                 messageQueue = new MessageQueue(@".\Private$\Fundoo");
@@ -163,7 +176,7 @@ namespace FundooRepository.Repository
             {
                 byte[] encryptData = new byte[password.Length];
                 encryptData = Encoding.UTF8.GetBytes(password);
-                string encodedData= Convert.ToBase64String(encryptData);
+                string encodedData = Convert.ToBase64String(encryptData);
                 return encodedData;
             }
             catch (Exception ex)
