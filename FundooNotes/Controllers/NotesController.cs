@@ -250,7 +250,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = $"UserID - {userID} not found in our system" });
+                    return this.BadRequest(new { Status = false, Message = "No data found in our system" });
                 }
             }
             catch (Exception ex)
@@ -272,7 +272,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = $"UserID - {userID} not found in our system" });
+                    return this.BadRequest(new { Status = false, Message = "No data found in our system" });
                 }
             }
             catch (Exception ex)
@@ -294,7 +294,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = $"UserID - {userID} not found in our system" });
+                    return this.BadRequest(new { Status = false, Message = "No data found in our system" });
                 }
             }
             catch (Exception ex)
@@ -316,7 +316,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    return this.BadRequest(new { Status = false, Message = $"UserID - {userID} not found in our system" });
+                    return this.BadRequest(new { Status = false, Message = "No data found in our system" });
                 }
             }
             catch (Exception ex)
