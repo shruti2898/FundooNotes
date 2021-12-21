@@ -25,4 +25,8 @@
     <ProjectReference Include="..\FundooModels\FundooModels.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repository\" />
+  </ItemGroup>
+
 </Project>
