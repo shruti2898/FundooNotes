@@ -8,15 +8,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
+using Experimental.System.Messaging;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 
 namespace FundooRepository.Repository
 {
     public class UserRepository : IUserRepository
     {
         private readonly UserContext context;
-        public UserRepository(UserContext context)
+        public IConfiguration configuration { get; }
+        public UserRepository(UserContext context, IConfiguration configuration)
         {
             this.context = context;
+            this.configuration = configuration;
         }
 
         public async Task<RegisterModel> Register(RegisterModel userDetails)
@@ -25,14 +30,14 @@ namespace FundooRepository.Repository
             {
                 var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
 
-                if (emailExist==null)
+                if (emailExist == null)
                 {
                     userDetails.Password = PasswordEncryption(userDetails.Password);
                     this.context.Users.Add(userDetails);
                     await this.context.SaveChangesAsync();
                     return userDetails;
                 }
-                return null;   
+                return null;
             }
             catch (ArgumentNullException exception)
             {
@@ -44,14 +49,20 @@ namespace FundooRepository.Repository
         {
             try
             {
-                var userEmailExist= await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+                var userEmailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userEmailExist != null)
                 {
-                    userCredentials.UserPassword =  PasswordEncryption(userCredentials.UserPassword);
-                    var userDetails =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+                    userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
+                    var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+
+                    ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configuration["RedisServer"]);
+                    IDatabase database = multiplexer.GetDatabase();
+                    database.StringSet(key: "User ID", userDetails.UserId.ToString());
+                    database.StringSet(key: "First Name", userDetails.FirstName);
+                    database.StringSet(key: "Last Name", userDetails.LastName);
+
                     if (userDetails != null)
-                    {   
-                        
+                    {
                         return userDetails;
                     }
                     return null;
@@ -69,7 +80,7 @@ namespace FundooRepository.Repository
         {
             try
             {
-                var userInfo =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+                var userInfo = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userInfo != null)
                 {
                     userCredentials.UserPassword = PasswordEncryption(userCredentials.UserPassword);
@@ -100,13 +111,13 @@ namespace FundooRepository.Repository
 
                     SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
 
-                    sendEmail.From = new MailAddress("shruti160447@gmail.com");
+                    sendEmail.From = new MailAddress(configuration["SmtpUsername"]);
                     sendEmail.To.Add(userEmail);
                     sendEmail.Subject = "Reset your password";
-                    sendEmail.Body = $"Hello {userDisplayName}, A password reset for your account was requested. Please click the link below to change your password.";
-
+                    SendMSMQ(userDisplayName);
+                    sendEmail.Body = ReceiveMSMQ();
                     smtpServer.Port = 587;
-                    smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
+                    smtpServer.Credentials = new System.Net.NetworkCredential(configuration["SmtpUsername"], configuration["SmtpPassword"]);
                     smtpServer.EnableSsl = true;
 
                     await smtpServer.SendMailAsync(sendEmail);
@@ -116,9 +127,34 @@ namespace FundooRepository.Repository
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
+        }
+
+        public void SendMSMQ(string userDisplayName)
+        {
+            MessageQueue messageQueue;
+
+            if (MessageQueue.Exists(@".\Private$\Fundoo"))
+            {
+                messageQueue = new MessageQueue(@".\Private$\Fundoo");
+            }
+            else
+            {
+                messageQueue = MessageQueue.Create(@".\Private$\Fundoo");
+            }
+            messageQueue.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
+            string body = $"Hello {userDisplayName}, A password reset for your account was requested.Please click the link below to change your password.";
+            messageQueue.Label = "Mail Body";
+            messageQueue.Send(body);
+        }
+
+        public string ReceiveMSMQ()
+        {
+            MessageQueue messageQueue = new MessageQueue(@".\Private$\Fundoo");
+            var receiveMessage = messageQueue.Receive();
+            receiveMessage.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
+            return receiveMessage.Body.ToString();
         }
 
         public string PasswordEncryption(string password)
@@ -127,7 +163,7 @@ namespace FundooRepository.Repository
             {
                 byte[] encryptData = new byte[password.Length];
                 encryptData = Encoding.UTF8.GetBytes(password);
-                string encodedData= Convert.ToBase64String(encryptData);
+                string encodedData = Convert.ToBase64String(encryptData);
                 return encodedData;
             }
             catch (Exception ex)
