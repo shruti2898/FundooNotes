@@ -9,15 +9,19 @@ using System.Threading.Tasks;
 using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
 using Experimental.System.Messaging;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 
 namespace FundooRepository.Repository
 {
     public class UserRepository : IUserRepository
     {
         private readonly UserContext context;
-        public UserRepository(UserContext context)
+        public IConfiguration configuration { get; }
+        public UserRepository(UserContext context, IConfiguration configuration)
         {
             this.context = context;
+            this.configuration = configuration;
         }
 
         public async Task<RegisterModel> Register(RegisterModel userDetails)
@@ -50,9 +54,15 @@ namespace FundooRepository.Repository
                 {
                     userCredentials.UserPassword =  PasswordEncryption(userCredentials.UserPassword);
                     var userDetails =  await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+
+                    ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configuration["RedisServer"]);
+                    IDatabase database = multiplexer.GetDatabase();
+                    database.StringSet(key: "User ID", userDetails.UserId.ToString());
+                    database.StringSet(key: "First Name", userDetails.FirstName);
+                    database.StringSet(key: "Last Name", userDetails.LastName);
+                    
                     if (userDetails != null)
-                    {   
-                        
+                    {
                         return userDetails;
                     }
                     return null;
@@ -101,14 +111,13 @@ namespace FundooRepository.Repository
 
                     SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
 
-                    sendEmail.From = new MailAddress("shruti160447@gmail.com");
+                    sendEmail.From = new MailAddress(configuration["SmtpUsername"]);
                     sendEmail.To.Add(userEmail);
                     sendEmail.Subject = "Reset your password";
-                    SendMSMQ();
-                    // sendEmail.Body = $"Hello {userDisplayName}, A password reset for your account was requested. Please click the link below to change your password.";
+                    SendMSMQ(userDisplayName);
                     sendEmail.Body = ReceiveMSMQ();
                     smtpServer.Port = 587;
-                    smtpServer.Credentials = new System.Net.NetworkCredential("shruti160447@gmail.com", "160447@Cse");
+                    smtpServer.Credentials = new System.Net.NetworkCredential(configuration["SmtpUsername"], configuration["SmtpPassword"]);
                     smtpServer.EnableSsl = true;
 
                     await smtpServer.SendMailAsync(sendEmail);
@@ -118,12 +127,11 @@ namespace FundooRepository.Repository
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
 
-        public void SendMSMQ()
+        public void SendMSMQ(string userDisplayName)
         {
             MessageQueue messageQueue;
             
@@ -136,7 +144,7 @@ namespace FundooRepository.Repository
                 messageQueue = MessageQueue.Create(@".\Private$\Fundoo");
             }
             messageQueue.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
-            string body = "This for testing SMTP main for Gmail";
+            string body = $"Hello {userDisplayName}, A password reset for your account was requested.Please click the link below to change your password.";
             messageQueue.Label = "Mail Body";
             messageQueue.Send(body);
         }

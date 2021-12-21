@@ -5,15 +5,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StackExchange.Redis;
+using Microsoft.Extensions.Configuration;
 
 namespace FundooNotes.Controllers
 {
     public class UserController : ControllerBase
     {
         private readonly IUserManager manager;
-        public UserController(IUserManager manager)
+        public IConfiguration configuration { get; }
+        public UserController(IUserManager manager, IConfiguration configuration)
         {
             this.manager = manager;
+            this.configuration = configuration;
         }
 
         [HttpPost]
@@ -45,9 +49,22 @@ namespace FundooNotes.Controllers
             try
             {
                 RegisterModel result = await this.manager.Login(userCredentials);
+
                 if (result != null)
                 {
-                    return this.Ok(new ResponseModel<RegisterModel>{ Status = true, Message = "Logged in successfully", Data = result });
+                    ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configuration["RedisServer"]);
+                    IDatabase database = multiplexer.GetDatabase();
+                    int id = Convert.ToInt32(database.StringGet("User ID"));
+                    string firstName = database.StringGet("First Name");
+                    string lastName = database.StringGet("Last Name");
+                    RegisterModel loginData = new RegisterModel
+                    {
+                        FirstName = firstName,
+                        LastName = lastName,
+                        UserId = id,
+                        Email = userCredentials.UserEmail
+                    };
+                    return this.Ok(new ResponseModel<RegisterModel>{ Status = true, Message = "Logged in successfully", Data = loginData });
                 }
                 else
                 {
