@@ -17,7 +17,6 @@ namespace FundooRepository.Repository
         {
             this.context = context;
         }
-
         public async Task<NotesModel> AddNotes(NotesModel noteData)
         {
             try
@@ -223,7 +222,6 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
-
         public async Task<IEnumerable<NotesModel>> GetAllNotes(int userID)
         {
             try
@@ -258,7 +256,6 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
-
         public async Task<IEnumerable<NotesModel>> GetAllBinNotes(int userID)
         {
             try
