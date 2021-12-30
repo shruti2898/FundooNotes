@@ -1,26 +1,51 @@
-﻿using FundooManager.Interface;
-using FundooModels;
-using FundooRepository.Interface;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="LabelManager.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooManager.Manager
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using FundooManager.Interface;
+    using FundooModels;
+    using FundooRepository.Interface;
+
+    /// <summary>
+    /// Label Manager Class
+    /// </summary>
+    /// <seealso cref="FundooManager.Interface.ILabelManager" />
     public class LabelManager : ILabelManager
     {
+        /// <summary>
+        /// The label repository
+        /// </summary>
         private readonly ILabelRepository labelRepository;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LabelManager"/> class.
+        /// </summary>
+        /// <param name="labelRepository">The label repository.</param>
         public LabelManager(ILabelRepository labelRepository)
         {
             this.labelRepository = labelRepository;
         }
 
-        public async Task<LabelModel> AddLabels(LabelModel labelData)
+        /// <summary>
+        /// Adds the labels.
+        /// </summary>
+        /// <param name="labelData">The label data.</param>
+        /// <returns>
+        /// Label Model data
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
+        public async Task<LabelModel> AddLabelsOnNote(LabelModel labelData)
         {
             try
             {
-                return await this.labelRepository.AddLabels(labelData);
+                return await this.labelRepository.AddLabelsOnNote(labelData);
             }
             catch (Exception e)
             {
@@ -28,6 +53,32 @@ namespace FundooManager.Manager
             }
         }
 
+        /// <summary>
+        /// Creates the labels for user.
+        /// </summary>
+        /// <param name="labelData">The label data.</param>
+        /// <returns>
+        /// Label Model data
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
+        public async Task<LabelModel> CreateLabelsForUser(LabelModel labelData)
+        {
+            try
+            {
+                return await this.labelRepository.CreateLabelsForUser(labelData);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Deletes the user label.
+        /// </summary>
+        /// <param name="labelData">The label data.</param>
+        /// <returns>True if label is deleted from user else false</returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> DeleteUserLabel(LabelModel labelData)
         {
             try
@@ -40,6 +91,12 @@ namespace FundooManager.Manager
             }
         }
 
+        /// <summary>
+        /// Edits the label.
+        /// </summary>
+        /// <param name="labelData">The label data.</param>
+        /// <returns>True if label name is edited successfully else false</returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> EditLabel(LabelModel labelData)
         {
             try
@@ -52,6 +109,14 @@ namespace FundooManager.Manager
             }
         }
 
+        /// <summary>
+        /// Gets all labels.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns>
+        /// List of all labels created by user
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<LabelModel>> GetAllLabels(int userId)
         {
             try
@@ -64,6 +129,14 @@ namespace FundooManager.Manager
             }
         }
 
+        /// <summary>
+        /// Gets all notes from label.
+        /// </summary>
+        /// <param name="labelId">The label identifier.</param>
+        /// <returns>
+        /// List of all notes with given label
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<List<NotesModel>> GetAllNotesFromLabel(int labelId)
         {
             try
@@ -76,6 +149,14 @@ namespace FundooManager.Manager
             }
         }
 
+        /// <summary>
+        /// Removes the note label.
+        /// </summary>
+        /// <param name="labelId">The label identifier.</param>
+        /// <returns>
+        /// True if label is removed from note else false
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> RemoveNoteLabel(int labelId)
         {
             try
