@@ -1,40 +1,74 @@
-﻿using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using FundooModels;
-using FundooRepository.Context;
-using FundooRepository.Interface;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="NotesRepository.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooRepository.Repository
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using CloudinaryDotNet;
+    using CloudinaryDotNet.Actions;
+    using FundooModels;
+    using FundooRepository.Context;
+    using FundooRepository.Interface;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+
+    /// <summary>
+    /// Notes Repository Interface
+    /// </summary>
+    /// <seealso cref="FundooRepository.Interface.INotesRepository" />
     public class NotesRepository : INotesRepository
     {
+        /// <summary>
+        /// The context for Notes
+        /// </summary>
         private readonly UserContext context;
-        private readonly IConfiguration configuration;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NotesRepository"/> class.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="configuration">The configuration.</param>
         public NotesRepository(UserContext context, IConfiguration configuration)
         {
             this.context = context;
-            this.configuration = configuration;
+            this.Configuration = configuration;
         }
+
+        /// <summary>
+        /// Gets the configuration.
+        /// </summary>
+        /// <value>
+        /// The configuration.
+        /// </value>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Adds the notes.
+        /// </summary>
+        /// <param name="noteData">The note data.</param>
+        /// <returns>
+        /// Data of newly added note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> AddNotes(NotesModel noteData)
         {
             try
             {
-                bool checkNullVaules = (noteData.NoteTitle == null && noteData.NoteDescription == null && noteData.NoteReminder == null && noteData.AddImage == null);
-
+                bool checkNullVaules = noteData.NoteTitle == null && noteData.NoteDescription == null && noteData.NoteReminder == null && noteData.AddImage == null;
                 if (!checkNullVaules)
                 {
                     await this.context.Notes.AddAsync(noteData);
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -42,13 +76,21 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Updates the notes.
+        /// </summary>
+        /// <param name="noteData">The note data.</param>
+        /// <returns>
+        /// Data of updated note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> UpdateNotes(NotesModel noteData)
         {
             try
             {
                 NotesModel result = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteData.NotesId);
-                bool checkNullVaules = (noteData.NoteTitle == null && noteData.NoteDescription == null && noteData.NoteReminder == null && noteData.AddImage == null);
-
+                bool checkNullVaules = noteData.NoteTitle == null && noteData.NoteDescription == null && noteData.NoteReminder == null && noteData.AddImage == null;
                 if (result != null && !checkNullVaules)
                 {
                     result.NoteTitle = noteData.NoteTitle;
@@ -59,11 +101,11 @@ namespace FundooRepository.Repository
                     result.ArchiveNote = noteData.ArchiveNote;
                     result.DeleteNote = noteData.DeleteNote;
                     result.PinNote = noteData.PinNote;
-
                     this.context.Notes.Update(result);
                     await this.context.SaveChangesAsync();
                     return result;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -71,6 +113,16 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Changes the color.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <param name="color">The color.</param>
+        /// <returns>
+        /// Note data after changing the note color
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> ChangeColor(int noteId, string color)
         {
             try
@@ -83,6 +135,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -90,6 +143,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Adds to bin.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after adding note to bin
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> AddToBin(int noteId)
         {
             try
@@ -104,6 +166,7 @@ namespace FundooRepository.Repository
                     this.context.SaveChanges();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -111,6 +174,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Restores the note.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after restoring the note from bin
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> RestoreNote(int noteId)
         {
             try
@@ -123,6 +195,7 @@ namespace FundooRepository.Repository
                     this.context.SaveChanges();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -130,6 +203,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Deletes the note forever.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// True if note is deleted successfully else false
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> DeleteNoteForever(int noteId)
         {
             try
@@ -141,6 +223,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return true;
                 }
+
                 return false;
             }
             catch (ArgumentNullException ex)
@@ -148,6 +231,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Pins the note.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after pinning the note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> PinNote(int noteId)
         {
             try
@@ -161,6 +253,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -168,6 +261,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Unpin the note.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after unpinning the note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> UnPinNote(int noteId)
         {
             try
@@ -181,6 +283,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -188,6 +291,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Archives the note.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after archiving the note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> ArchiveNote(int noteId)
         {
             try
@@ -201,6 +313,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -208,6 +321,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Removing the note from archives.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after removing note from archives
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> UnArchiveNote(int noteId)
         {
             try
@@ -221,6 +343,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -228,6 +351,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all notes.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// List of all notes created by user
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<NotesModel>> GetAllNotes(int userID)
         {
             try
@@ -237,14 +369,23 @@ namespace FundooRepository.Repository
                 {
                     return notes;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all archives.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// List of all archived notes
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<NotesModel>> GetAllArchives(int userID)
         {
             try
@@ -254,6 +395,7 @@ namespace FundooRepository.Repository
                 {
                     return archives;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -261,6 +403,15 @@ namespace FundooRepository.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all bin notes.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// List of all notes present in bin of a user
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<NotesModel>> GetAllBinNotes(int userID)
         {
             try
@@ -270,14 +421,23 @@ namespace FundooRepository.Repository
                 {
                     return binNotes;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all pin notes.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// List of all pinned notes
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<NotesModel>> GetAllPinNotes(int userID)
         {
             try
@@ -287,15 +447,24 @@ namespace FundooRepository.Repository
                 {
                     return pinNotes;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
 
+        /// <summary>
+        /// Adds reminder on note.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <param name="reminder">The reminder.</param>
+        /// <returns>
+        /// Note data after adding reminder on note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> Reminder(int noteId, string reminder)
         {
             try
@@ -308,15 +477,23 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
 
+        /// <summary>
+        /// Deletes the reminder.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after removing the reminder from note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> DeleteReminder(int noteId)
         {
             try
@@ -329,33 +506,50 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
 
+        /// <summary>
+        /// Gets all reminders.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// List of reminder notes of user
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<IEnumerable<NotesModel>> GetAllReminders(int userID)
         {
             try
             {
-                var reminders = await this.context.Notes.Where(data => data.UserId == userID && data.NoteReminder !=null).ToListAsync();
+                var reminders = await this.context.Notes.Where(data => data.UserId == userID && data.NoteReminder != null).ToListAsync();
                 if (reminders.Count > 0)
                 {
                     return reminders;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
 
+        /// <summary>
+        /// Adds the image.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <param name="image">The image.</param>
+        /// <returns>
+        /// Note data after adding image on note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> AddImage(int noteId, IFormFile image)
         {
             try
@@ -363,34 +557,38 @@ namespace FundooRepository.Repository
                 var noteData = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteId);
                 if (noteData != null)
                 {
-                    string cloudName = configuration.GetValue<string>("Cloudinary:CloudName");
-                    string cloudApiKey = configuration.GetValue<string>("Cloudinary:CloudApiKey");
-                    string cloudApiSecret = configuration.GetValue<string>("Cloudinary:CloudApiSecret");
-                   
-                    var cloudinary = new Cloudinary( new Account( cloudName, cloudApiKey, cloudApiSecret));
-
+                    string cloudName = this.Configuration.GetValue<string>("Cloudinary:CloudName");
+                    string cloudApiKey = this.Configuration.GetValue<string>("Cloudinary:CloudApiKey");
+                    string cloudApiSecret = this.Configuration.GetValue<string>("Cloudinary:CloudApiSecret");
+                    var cloudinary = new Cloudinary(new Account(cloudName, cloudApiKey, cloudApiSecret));
                     var uploadParams = new ImageUploadParams()
                     {
                         File = new FileDescription(image.FileName, image.OpenReadStream()),
                     };
-
                     var uploadResult = cloudinary.Upload(uploadParams);
-
                     var imageUrl = uploadResult.Url.ToString();
                     noteData.AddImage = imageUrl;
-
                     this.context.Notes.Update(noteData);
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
             {
-
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Deletes the image.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Note data after deleting image from the note
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<NotesModel> DeleteImage(int noteId)
         {
             try
@@ -403,6 +601,7 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
+
                 return null;
             }
             catch (ArgumentNullException ex)
