@@ -1,23 +1,48 @@
-﻿using FundooManager.Interface;
-using FundooModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="CollaboratorController.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooNotes.Controllers
-{   
+{
+    using System;
+    using System.Threading.Tasks;
+    using FundooManager.Interface;
+    using FundooModels;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
+
+    /// <summary>
+    /// Controller for Collaborator
+    /// </summary>
+    /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize]
     public class CollaboratorController : ControllerBase
     {
+        /// <summary>
+        /// The collaborator manager
+        /// </summary>
         private readonly ICollaboratorsManager collabManager;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CollaboratorController"/> class.
+        /// </summary>
+        /// <param name="collabManager">The collaborator manager.</param>
         public CollaboratorController(ICollaboratorsManager collabManager)
         {
             this.collabManager = collabManager;
         }
 
+        /// <summary>
+        /// Adds the collaborator.
+        /// </summary>
+        /// <param name="collabDetails">The collaborator details.</param>
+        /// <returns>
+        /// Ok object result if collaborator added successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
         [Route("api/addCollab")]
         public async Task<IActionResult> AddCollaborator([FromBody] CollaboratorsModel collabDetails)
@@ -40,6 +65,15 @@ namespace FundooNotes.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes the collaborator.
+        /// </summary>
+        /// <param name="collabDetails">The collaborator details.</param>
+        /// <returns>
+        /// Ok object result if collaborator deleted successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpDelete]
         [Route("api/deleteCollab")]
         public async Task<IActionResult> DeleteCollaborator([FromBody] CollaboratorsModel collabDetails)
@@ -62,6 +96,15 @@ namespace FundooNotes.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets all collaborators.
+        /// </summary>
+        /// <param name="noteId">The note identifier.</param>
+        /// <returns>
+        /// Ok object result if all collaborators are retrieved successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpGet]
         [Route("api/allCollabs")]
         public async Task<IActionResult> GetAllCollaborators(int noteId)
