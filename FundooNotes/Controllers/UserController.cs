@@ -1,29 +1,62 @@
-﻿using FundooModels;
-using FundooManager.Interface;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using StackExchange.Redis;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="UserController.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooNotes.Controllers
 {
+    using System;
+    using System.Threading.Tasks;
+    using FundooManager.Interface;
+    using FundooModels;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
+    using StackExchange.Redis;
+
+    /// <summary>
+    /// Controller for User
+    /// </summary>
     public class UserController : ControllerBase
-    {
+    {  
+        /// <summary>
+        /// The user manager
+        /// </summary>
         private readonly IUserManager manager;
+
+        /// <summary>
+        /// The logger
+        /// </summary>
         private readonly ILogger<UserController> logger;
-        public IConfiguration configuration { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserController"/> class.
+        /// </summary>
+        /// <param name="manager">The user manager</param>
+        /// <param name="configuration">The configuration</param>
+        /// <param name="logger">The logger</param>
         public UserController(IUserManager manager, IConfiguration configuration, ILogger<UserController> logger)
         {
             this.manager = manager;
-            this.configuration = configuration;
+            this.Configuration = configuration;
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Gets the configuration
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Registers the specified user.
+        /// </summary>
+        /// <param name="user">The user</param>
+        /// <returns>
+        /// Ok object result if user registration is successful
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
         [Route("api/register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel user)
@@ -50,6 +83,15 @@ namespace FundooNotes.Controllers
             }
         }
 
+        /// <summary>
+        /// Logins the specified user credentials.
+        /// </summary>
+        /// <param name="userCredentials">The user credentials.</param>
+        /// <returns>
+        /// Ok object result if user logs in successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
         [Route("api/login")]
         public async Task<IActionResult> Login([FromBody] UserCredentialsModel userCredentials)
@@ -61,24 +103,22 @@ namespace FundooNotes.Controllers
 
                 if (result != null)
                 {
-                    ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configuration["RedisServer"]);
+                    ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(this.Configuration["RedisServer"]);
                     IDatabase database = multiplexer.GetDatabase();
                     int id = Convert.ToInt32(database.StringGet("User ID"));
                     string firstName = database.StringGet("First Name");
                     string lastName = database.StringGet("Last Name");
                     RegisterModel loginData = new RegisterModel
-
                     {
                         FirstName = firstName,
                         LastName = lastName,
                         UserId = id,
                         Email = userCredentials.UserEmail
                     };
-                    string tokenJWT = this.manager.GenrateJwtToken(loginData.Email);
+                    string tokenJWT = this.manager.GenerateJwtToken(loginData.Email);
 
                     this.logger.LogInformation($"Logged in as {userCredentials.UserEmail}");
                     return this.Ok(new { Status = true, Message = "Logged in successfully", Data = loginData, Token = tokenJWT });
-
                 }
                 else
                 {
@@ -93,6 +133,15 @@ namespace FundooNotes.Controllers
             }
         }
 
+        /// <summary>
+        /// Resets the password.
+        /// </summary>
+        /// <param name="userCredentials">The user credentials.</param>
+        /// <returns>
+        /// Ok object result if password is changed successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPut]
         [Route("api/resetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] UserCredentialsModel userCredentials)
@@ -119,11 +168,19 @@ namespace FundooNotes.Controllers
             }
         }
 
+        /// <summary>
+        /// Sends email for reset password.
+        /// </summary>
+        /// <param name="userEmail">The user email.</param>
+        /// <returns>
+        /// Ok object result if password reset link is mailed successfully
+        /// else bad request object result
+        /// </returns>
+        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
         [Route("api/forgotPassword")]
         public async Task<IActionResult> ForgotPassword(string userEmail)
         {
-
             try
             {
                 this.logger.LogInformation($"{userEmail} is requesting to send forgot password link");
