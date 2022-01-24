@@ -26,7 +26,7 @@ namespace FundooManager.Interface
         /// </summary>
         /// <param name="loginUser">The login user.</param>
         /// <returns>User data after logging in successfully</returns>
-        Task<RegisterModel> Login(UserCredentialsModel loginUser);
+        Task<string> Login(UserCredentialsModel loginUser);
 
         /// <summary>
         /// Resets the password.
@@ -41,12 +41,5 @@ namespace FundooManager.Interface
         /// <param name="userEmail">The user email.</param>
         /// <returns>True if password reset link is mailed successfully else false</returns>
         Task<bool> ForgotPassword(string userEmail);
-
-        /// <summary>
-        /// Generates the JWT token.
-        /// </summary>
-        /// <param name="email">The email.</param>
-        /// <returns>Token string</returns>
-        string GenerateJwtToken(string email);
     }
 }

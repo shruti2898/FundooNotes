@@ -43,6 +43,12 @@ namespace FundooNotes
             services.AddTransient<ICollaboratorsManager, CollaboratorsManager>();
             services.AddTransient<ILabelRepository, LabelRepository>();
             services.AddTransient<ILabelManager, LabelManager>();
+            services.AddCors(options => options.AddPolicy(name: "CorsPolicyAllHosts", builder =>
+            {
+                builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            }));
             services.AddSession(options => 
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -67,13 +73,13 @@ namespace FundooNotes
                 {
                     {
                           new OpenApiSecurityScheme
-                            {
+                          {
                                 Reference = new OpenApiReference
                                 {
                                     Type = ReferenceType.SecurityScheme,
                                     Id = "Bearer"
                                 }
-                            },
+                          },
                             new string[] {}
                     }
                 });
@@ -102,6 +108,8 @@ namespace FundooNotes
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseCors("CorsPolicyAllHosts");
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseSession();

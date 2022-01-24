@@ -16,11 +16,12 @@ namespace FundooRepository.Repository
     using FundooModels;
     using FundooRepository.Context;
     using FundooRepository.Interface;
+    using FundooRepository.CustomException;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.IdentityModel.Tokens;
     using StackExchange.Redis;
-
+    
     /// <summary>
     /// User Repository Class
     /// </summary>
@@ -62,21 +63,25 @@ namespace FundooRepository.Repository
         public async Task<RegisterModel> Register(RegisterModel userDetails)
         {
             try
-            {  
+            {
+                ArgumentValidator.Validate(userDetails);
                 var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
                 if (emailExist == null)
-                {  
+                {
                     userDetails.Password = this.PasswordEncryption(userDetails.Password);
                     this.context.Users.Add(userDetails);
                     await this.context.SaveChangesAsync();
                     return userDetails;
                 }
-
                 return null;
             }
-            catch (ArgumentNullException exception)
+            catch(CustomException ex)
             {
-                throw new Exception(exception.Message);
+                throw ex;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
 
@@ -88,36 +93,66 @@ namespace FundooRepository.Repository
         /// User data after logging in successfully
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<RegisterModel> Login(UserCredentialsModel userCredentials)
+        public async Task<string> Login(UserCredentialsModel userCredentials)
         {
-            try
+            try 
+            { 
+            ArgumentValidator.Validate(userCredentials);
+            var userEmailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+            if (userEmailExist != null)
             {
-                var userEmailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
-                if (userEmailExist != null)
-                {
-                    userCredentials.UserPassword = this.PasswordEncryption(userCredentials.UserPassword);
-                    var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
+                userCredentials.UserPassword = this.PasswordEncryption(userCredentials.UserPassword);
+                var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail) && user.Password.Equals(userCredentials.UserPassword));
 
+                if (userDetails != null)
+                {
                     ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(this.Configuration["RedisServer"]);
                     IDatabase database = multiplexer.GetDatabase();
                     database.StringSet(key: "User ID", userDetails.UserId.ToString());
                     database.StringSet(key: "First Name", userDetails.FirstName);
                     database.StringSet(key: "Last Name", userDetails.LastName);
 
-                    if (userDetails != null)
-                    {
-                        return userDetails;
-                    }
-
-                    return null;
+                    string token = GenerateJwtToken(userDetails.Email, userDetails.UserId);
+                    return token;
                 }
-
-                return null;
             }
-            catch (ArgumentNullException ex)
+            return null; 
+            }
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Generates the JWT token.
+        /// </summary>
+        /// <param name="email">The email.</param>
+        /// <returns>
+        /// Token string
+        /// </returns>
+        public string GenerateJwtToken(string email, int userId)
+        {
+            string secret = this.Configuration.GetValue<string>("SecretJWT");
+            byte[] key = Encoding.UTF8.GetBytes(secret);
+            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
+            SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                new Claim(ClaimTypes.Email, email),
+                new Claim("UserId", userId.ToString())
+            }),
+                Expires = DateTime.UtcNow.AddMinutes(30),
+                SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature)
+            };
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
+            return handler.WriteToken(token);
         }
 
         /// <summary>
@@ -129,9 +164,10 @@ namespace FundooRepository.Repository
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> ResetPassword(UserCredentialsModel userCredentials)
-        {
-            try                      
+        {   
+            try
             {
+                ArgumentValidator.Validate(userCredentials);
                 var userInfo = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
                 if (userInfo != null)
                 {
@@ -141,10 +177,13 @@ namespace FundooRepository.Repository
                     await this.context.SaveChangesAsync();
                     return true;
                 }
-
                 return false;
             }
-            catch (ArgumentNullException ex)
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -162,6 +201,7 @@ namespace FundooRepository.Repository
         {
             try
             {
+                ArgumentValidator.Validate(userEmail);
                 var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userEmail));
                 if (userDetails != null)
                 {
@@ -187,7 +227,11 @@ namespace FundooRepository.Repository
 
                 return false;
             }
-            catch (ArgumentNullException ex)
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -211,7 +255,9 @@ namespace FundooRepository.Repository
             }
 
             messageQueue.Formatter = new XmlMessageFormatter(new Type[] { typeof(string) });
-            string body = $"Hello {userDisplayName}, A password reset for your account was requested.Please click the link below to change your password.";
+            string body = $"Hello {userDisplayName},\n " +
+                          $"A password reset for your account was requested.Please click the link below to change your password.\n" +
+                          $"http://localhost:4200/resetPassword";
             messageQueue.Label = "Mail Body";
             messageQueue.Send(body);
         }
@@ -228,7 +274,7 @@ namespace FundooRepository.Repository
             return receiveMessage.Body.ToString();
         }
 
-        /// <summary>
+        /// <summary>    
         /// Passwords the encryption.
         /// </summary>
         /// <param name="password">The password.</param>
@@ -245,34 +291,8 @@ namespace FundooRepository.Repository
             }
             catch (Exception ex)
             {
-                throw new Exception("Error in base64Encode" + ex.Message);
+                throw new Exception("Error in base64Encode " + ex.Message);
             }
-        }
-
-        /// <summary>
-        /// Generates the JWT token.
-        /// </summary>
-        /// <param name="email">The email.</param>
-        /// <returns>
-        /// Token string
-        /// </returns>
-        public string GenerateJwtToken(string email)
-        {
-            string secret = this.Configuration.GetValue<string>("SecretJWT");
-            byte[] key = Encoding.UTF8.GetBytes(secret);
-            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
-            SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                new Claim(ClaimTypes.Name, email)
-            }),
-                Expires = DateTime.UtcNow.AddMinutes(30),
-                SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature)
-            };
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
-            return handler.WriteToken(token);
         }
     }
 }

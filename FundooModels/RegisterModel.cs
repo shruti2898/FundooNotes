@@ -28,7 +28,7 @@ namespace FundooModels
         /// <value>
         /// The first name.
         /// </value>
-        [Required]
+       
         public string FirstName { get; set; }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace FundooModels
         /// <value>
         /// The last name.
         /// </value>
-        [Required]
+       
         public string LastName { get; set; }
 
         /// <summary>
@@ -46,8 +46,7 @@ namespace FundooModels
         /// <value>
         /// The email.
         /// </value>
-        [Required]
-        [RegularExpression("^[a-z][a-z0-9]{2,}([-.+]{1}[a-z0-9]{3})?[@][a-z0-9]{1,}[.][a-z]{3}([.][a-z]{2,3})?$", ErrorMessage = "Invalid email address. Please enter a valid email address.")]
+        
         public string Email { get; set; }
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace FundooModels
         /// <value>
         /// The password.
         /// </value>
-        [Required]
+       
         public string Password { get; set; }
     }
 }
