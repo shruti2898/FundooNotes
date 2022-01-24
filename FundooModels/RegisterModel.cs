@@ -1,22 +1,61 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="RegisterModel.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooModels
 {
+    using System.ComponentModel.DataAnnotations;
+
+    /// <summary>
+    /// Register Model Class
+    /// </summary>
     public class RegisterModel
     {
+        /// <summary>
+        /// Gets or sets the user identifier.
+        /// </summary>
+        /// <value>
+        /// The user identifier.
+        /// </value>
         [Key]
         public int UserId { get; set; }
-        [Required]
+
+        /// <summary>
+        /// Gets or sets the first name.
+        /// </summary>
+        /// <value>
+        /// The first name.
+        /// </value>
+       
         public string FirstName { get; set; }
-        [Required]
+
+        /// <summary>
+        /// Gets or sets the last name.
+        /// </summary>
+        /// <value>
+        /// The last name.
+        /// </value>
+       
         public string LastName { get; set; }
-        [Required]
-        [RegularExpression("^[a-z][a-z0-9]{2,}([-.+]{1}[a-z0-9]{3})?[@][a-z0-9]{1,}[.][a-z]{3}([.][a-z]{2,3})?$", ErrorMessage = "Invalid email address. Please enter a valid email address.")]
+
+        /// <summary>
+        /// Gets or sets the email.
+        /// </summary>
+        /// <value>
+        /// The email.
+        /// </value>
+        
         public string Email { get; set; }
-        [Required]
+
+        /// <summary>
+        /// Gets or sets the password.
+        /// </summary>
+        /// <value>
+        /// The password.
+        /// </value>
+       
         public string Password { get; set; }
     }
 }

@@ -36,12 +36,14 @@ namespace FundooRepository.Interface
         /// <returns>List of all labels</returns>
         Task<IEnumerable<LabelModel>> GetAllLabels(int userId);
 
+        Task<IEnumerable<LabelModel>> GetNoteLabels(int noteId);
+
         /// <summary>
         /// Gets all notes from label.
         /// </summary>
         /// <param name="labelId">The label identifier.</param>
         /// <returns>List of all notes with same label name</returns>
-        Task<List<NotesModel>> GetAllNotesFromLabel(int labelId);
+        Task<IEnumerable<NotesModel>> GetAllNotesFromLabel(int labelId);
 
         /// <summary>
         /// Removes the note label.
@@ -55,13 +57,13 @@ namespace FundooRepository.Interface
         /// </summary>
         /// <param name="label">The label.</param>
         /// <returns>True if label is deleted from user else false</returns>
-        Task<bool> DeleteUserLabel(LabelModel label);
+        Task<bool> DeleteUserLabel(int labelId);
 
         /// <summary>
         /// Edits the label.
         /// </summary>
         /// <param name="label">The label.</param>
         /// <returns>True if label name is edited successfully else false</returns>
-        Task<bool> EditLabel(LabelModel label);
+        Task<bool> EditLabel(int labelId,LabelModel label);
     }
 }
