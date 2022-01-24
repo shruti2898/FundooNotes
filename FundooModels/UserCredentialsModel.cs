@@ -19,7 +19,6 @@ namespace FundooModels
         /// <value>
         /// The user email.
         /// </value>
-        [Required]
         public string UserEmail { get; set; }
 
         /// <summary>
@@ -28,7 +27,6 @@ namespace FundooModels
         /// <value>
         /// The user password.
         /// </value>
-        [Required]
         public string UserPassword { get; set; }
     }
 }

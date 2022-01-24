@@ -10,6 +10,7 @@ namespace FundooManager.Manager
     using System.Threading.Tasks;
     using FundooManager.Interface;
     using FundooModels;
+    using FundooRepository.CustomException;
     using FundooRepository.Interface;
 
     /// <summary>
@@ -46,9 +47,13 @@ namespace FundooManager.Manager
             {
                 return await this.repository.Register(user);
             }
-            catch (Exception ex)
+            catch (CustomException ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
             }
         }
 
@@ -60,15 +65,19 @@ namespace FundooManager.Manager
         /// User data after logging in successfully
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<RegisterModel> Login(UserCredentialsModel loginUser)
+        public async Task<string> Login(UserCredentialsModel loginUser)
         {
             try
             {
                 return await this.repository.Login(loginUser);
             }
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
@@ -86,9 +95,13 @@ namespace FundooManager.Manager
             {
                 return await this.repository.ResetPassword(userCredentials);
             }
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
@@ -106,30 +119,15 @@ namespace FundooManager.Manager
             {
                 return await this.repository.ForgotPassword(userEmail);
             }
+            catch (CustomException ex)
+            {
+                throw ex;
+            }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw ex;
             }
         }
 
-        /// <summary>
-        /// Generates the JWT token.
-        /// </summary>
-        /// <param name="email">The email.</param>
-        /// <returns>
-        /// Token string
-        /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
-        public string GenerateJwtToken(string email)
-        {
-            try
-            {
-                return this.repository.GenerateJwtToken(email);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
     }
 }

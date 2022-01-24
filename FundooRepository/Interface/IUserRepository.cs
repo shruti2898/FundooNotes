@@ -26,7 +26,7 @@ namespace FundooRepository.Interface
         /// </summary>
         /// <param name="loginUser">The login user.</param>
         /// <returns>User data after logging in successfully</returns>
-        Task<RegisterModel> Login(UserCredentialsModel loginUser);
+        Task<string> Login(UserCredentialsModel loginUser);
 
         /// <summary>
         /// Resets the password.
@@ -47,6 +47,5 @@ namespace FundooRepository.Interface
         /// </summary>
         /// <param name="email">The email.</param>
         /// <returns>Token string</returns>
-        string GenerateJwtToken(string email);
     }
 }
