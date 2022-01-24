@@ -19,6 +19,8 @@ namespace FundooNotes.Controllers
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
     public class LabelController : ControllerBase
     {
         /// <summary>
@@ -45,7 +47,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
-        [Route("api/addLabel")]
+        [Route("addLabel")]
         public async Task<IActionResult> AddLabelsOnNote([FromBody] LabelModel labelData)
         {
             try
@@ -62,7 +64,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -76,7 +78,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
-        [Route("api/createLabel")]
+        [Route("createLabel")]
         public async Task<IActionResult> CreateLabelsForUser([FromBody] LabelModel labelData)
         {
             try
@@ -93,7 +95,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -107,7 +109,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpGet]
-        [Route("api/getLabels")]
+        [Route("getLabels/{userId}")]
         public async Task<IActionResult> GetAllLabels(int userId)
         {
             try
@@ -124,7 +126,29 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("noteLabels/{noteId}")]
+        public async Task<IActionResult> GetNoteLabels(int noteId)
+        {
+            try
+            {
+                var data = await this.labelManager.GetAllLabels(noteId);
+                if (data != null)
+                {
+                    return this.Ok(new ResponseModel<IEnumerable<LabelModel>> { Status = true, Message = "Retrieved all labels for note successfully", Data = data });
+                }
+                else
+                {
+                    return this.BadRequest(new { Status = false, Message = "No such data found in our system" });
+                }
+            }
+            catch (Exception e)
+            {
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -138,7 +162,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpGet]
-        [Route("api/getLabelNotes")]
+        [Route("{labelId}/notes")]
         public async Task<IActionResult> GetAllNotesFromLabel(int labelId)
         {
             try
@@ -146,7 +170,7 @@ namespace FundooNotes.Controllers
                 var data = await this.labelManager.GetAllNotesFromLabel(labelId);
                 if (data != null)
                 {
-                    return this.Ok(new ResponseModel<List<NotesModel>> { Status = true, Message = "Retrieved all notes from label successfully", Data = data });
+                    return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = "Retrieved all notes from label successfully", Data = data });
                 }
                 else
                 {
@@ -155,7 +179,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -169,12 +193,12 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpDelete]
-        [Route("api/deleteLabel")]
-        public async Task<IActionResult> DeleteUserLabel([FromBody] LabelModel labelData)
+        [Route("{labelId}/delete")]
+        public async Task<IActionResult> DeleteUserLabel(int labelId)
         {
             try
             {
-                var result = await this.labelManager.DeleteUserLabel(labelData);
+                var result = await this.labelManager.DeleteUserLabel(labelId);
                 if (result)
                 {
                     return this.Ok(new { Status = true, Message = "Label deleted from user successfully" });
@@ -186,7 +210,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -200,7 +224,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpDelete]
-        [Route("api/removeLabel")]
+        [Route("{labelId}/remove")]
         public async Task<IActionResult> RemoveNoteLabel(int labelId)
         {
             try
@@ -217,7 +241,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -231,12 +255,12 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPut]
-        [Route("api/editLabel")]
-        public async Task<IActionResult> EditLabel([FromBody] LabelModel labelData)
+        [Route("{labelId}/edit")]
+        public async Task<IActionResult> EditLabel(int labelId, [FromBody] LabelModel labelData)
         {
             try
             {
-                var result = await this.labelManager.EditLabel(labelData);
+                var result = await this.labelManager.EditLabel(labelId,labelData);
                 if (result)
                 {
                     return this.Ok(new { Status = true, Message = "Label edited successfully" });
@@ -248,7 +272,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
     }

@@ -52,7 +52,12 @@ namespace FundooRepository.Repository
                 {  
                     await this.context.Labels.AddAsync(labelData);
                     await this.context.SaveChangesAsync();
-                    await this.CreateLabelsForUser(labelData);
+                    var userLabel = await this.CreateLabelsForUser(labelData);
+                    if (userLabel != null)
+                    {
+                        userLabel.NoteId = labelData.NoteId;
+                        return userLabel;
+                    }
                     return labelData;
                 }
 
@@ -107,7 +112,7 @@ namespace FundooRepository.Repository
             try
             {
                 var labels = await this.context.Labels.Where(data => data.UserId == userId).ToListAsync();
-                if (labels.Count > 0)
+                  if (labels.Count > 0)
                 {
                     return labels;
                 }
@@ -128,7 +133,7 @@ namespace FundooRepository.Repository
         /// List of all notes with same label name
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<List<NotesModel>> GetAllNotesFromLabel(int labelId)
+        public async Task<IEnumerable<NotesModel>> GetAllNotesFromLabel(int labelId)
         {
             try
             {
@@ -147,7 +152,7 @@ namespace FundooRepository.Repository
             }
         }
 
-        /// <summary>
+        /// <summary>      
         /// Removes the note label.
         /// </summary>
         /// <param name="labelId">The label identifier.</param>
@@ -183,13 +188,14 @@ namespace FundooRepository.Repository
         /// True if label is deleted from user else false
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> DeleteUserLabel(LabelModel label)
+        public async Task<bool> DeleteUserLabel(int labelId)
         {
             try
             {
-                var labels = this.context.Labels.Where(data => data.UserId == label.UserId && data.LabelName == label.LabelName).ToList();
-                if (labels.Count > 0)
+                var labelExist = await this.context.Labels.SingleOrDefaultAsync(data => data.LabelId == labelId);
+                if (labelExist !=null)
                 {
+                    var labels = await this.context.Labels.Where(data => data.UserId == labelExist.UserId && data.LabelName==labelExist.LabelName).ToListAsync();
                     this.context.Labels.RemoveRange(labels);
                     await this.context.SaveChangesAsync();
                     return true;
@@ -211,11 +217,11 @@ namespace FundooRepository.Repository
         /// True if label name is edited successfully else false
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> EditLabel(LabelModel label)
+        public async Task<bool> EditLabel(int labelId,LabelModel label)
         {
             try
             {
-                var labelData = await this.context.Labels.SingleOrDefaultAsync(data => data.LabelId == label.LabelId);
+                var labelData = await this.context.Labels.SingleOrDefaultAsync(data => data.LabelId == labelId  );
                 var labels = this.context.Labels.Where(data => data.UserId == label.UserId && data.LabelName.Equals(labelData.LabelName)).ToList();
                 if (labels.Count > 0)
                 {
@@ -225,6 +231,24 @@ namespace FundooRepository.Repository
                 }
 
                 return false;
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<IEnumerable<LabelModel>> GetNoteLabels(int noteId)
+        {
+            try
+            {
+                var labels = await this.context.Labels.Where(data => data.NoteId == noteId).ToListAsync();
+                if (labels.Count > 0)
+                {
+                    return labels;
+                }
+
+                return null;
             }
             catch (ArgumentNullException ex)
             {

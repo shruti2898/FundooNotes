@@ -79,11 +79,11 @@ namespace FundooManager.Manager
         /// <param name="labelData">The label data.</param>
         /// <returns>True if label is deleted from user else false</returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> DeleteUserLabel(LabelModel labelData)
+        public async Task<bool> DeleteUserLabel(int labelId)
         {
             try
             {
-                return await this.labelRepository.DeleteUserLabel(labelData);
+                return await this.labelRepository.DeleteUserLabel(labelId);
             }
             catch (Exception e)
             {
@@ -97,18 +97,18 @@ namespace FundooManager.Manager
         /// <param name="labelData">The label data.</param>
         /// <returns>True if label name is edited successfully else false</returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> EditLabel(LabelModel labelData)
+        public async Task<bool> EditLabel(int labelId,LabelModel labelData)
         {
             try
             {
-                return await this.labelRepository.EditLabel(labelData);
+                return await this.labelRepository.EditLabel(labelId, labelData);
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
         }
-
+                        
         /// <summary>
         /// Gets all labels.
         /// </summary>
@@ -129,6 +129,18 @@ namespace FundooManager.Manager
             }
         }
 
+        public async Task<IEnumerable<LabelModel>> GetNoteLabels(int noteId)
+        {
+            try
+            {
+                return await this.labelRepository.GetNoteLabels(noteId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
         /// <summary>
         /// Gets all notes from label.
         /// </summary>
@@ -137,7 +149,7 @@ namespace FundooManager.Manager
         /// List of all notes with given label
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<List<NotesModel>> GetAllNotesFromLabel(int labelId)
+    public async Task<IEnumerable<NotesModel>> GetAllNotesFromLabel(int labelId)
         {
             try
             {
