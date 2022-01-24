@@ -81,11 +81,11 @@ namespace FundooManager.Manager
         /// Note data after changing the note color
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<NotesModel> ChangeColor(int noteId, string color)
+        public async Task<NotesModel> ChangeColor(int noteId,NotesModel noteData)
         {
             try
             {
-                return await this.notesRepository.ChangeColor(noteId, color);
+                return await this.notesRepository.ChangeColor(noteId,noteData);
             }
             catch (Exception e)
             {
@@ -314,11 +314,11 @@ namespace FundooManager.Manager
         /// Note data after adding reminder on note
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<NotesModel> Reminder(int noteId, string reminder)
+        public async Task<NotesModel> Reminder(int noteId, NotesModel noteData)
         {
             try
             {
-                return await this.notesRepository.Reminder(noteId, reminder);
+                return await this.notesRepository.Reminder(noteId, noteData);
             }
             catch (Exception e)
             {
@@ -398,6 +398,18 @@ namespace FundooManager.Manager
             try
             {
                 return await this.notesRepository.DeleteImage(noteId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<bool> EmptyBin(int userID)
+        {
+            try
+            {
+                return await this.notesRepository.EmptyBin(userID);
             }
             catch (Exception e)
             {

@@ -97,7 +97,7 @@ namespace FundooModels
         /// <value>
         /// The user identifier.
         /// </value>
-        [Required]
+        
         [ForeignKey("RegisterModel")]
         public int UserId { get; set; }
 
