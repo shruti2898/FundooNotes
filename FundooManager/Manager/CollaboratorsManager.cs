@@ -61,11 +61,11 @@ namespace FundooManager.Manager
         /// True if collaborator is deleted else false
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> DeleteCollaborator(CollaboratorsModel collabData)
+        public async Task<bool> DeleteCollaborator(int collabId)
         {
             try
             {
-                return await this.collabRepository.DeleteCollaborator(collabData);
+                return await this.collabRepository.DeleteCollaborator(collabId);
             }
             catch (Exception e)
             {
