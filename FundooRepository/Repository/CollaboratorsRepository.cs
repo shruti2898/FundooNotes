@@ -43,20 +43,22 @@ namespace FundooRepository.Repository
         /// Collaborator Model Data
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
+       
         public async Task<CollaboratorsModel> AddCollaborator(CollaboratorsModel collabData)
         {
             try
             {
-                var checkNoteExist = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == collabData.NoteId);
-                var checkEmailExist = await this.context.Users.SingleOrDefaultAsync(data => data.UserId == checkNoteExist.UserId && data.Email == collabData.CollabEmail);
-                var checkCollabExist = await this.context.Collaborators.SingleOrDefaultAsync(data => data.NoteId == collabData.NoteId && data.CollabEmail == collabData.CollabEmail);
-                if (checkNoteExist != null && checkEmailExist == null && checkCollabExist == null)
+                var checkOwnerEmail = await this.context.Notes.SingleOrDefaultAsync(data => data.UserId == this.context.Users.Where(user => user.Email == collabData.CollabEmail).Select(owner => owner.UserId).SingleOrDefault());
+                if (checkOwnerEmail == null)
                 {
-                    await this.context.Collaborators.AddAsync(collabData);
-                    await this.context.SaveChangesAsync();
-                    return collabData;
+                    var checkCollabEmail = await this.context.Collaborators.SingleOrDefaultAsync(data => data.CollabEmail == collabData.CollabEmail && data.NoteId == collabData.NoteId);
+                    if(checkCollabEmail == null)
+                    {
+                        await this.context.Collaborators.AddAsync(collabData);
+                        await this.context.SaveChangesAsync();
+                        return collabData;
+                    }
                 }
-
                 return null;
             }
             catch (ArgumentNullException ex)
@@ -73,11 +75,11 @@ namespace FundooRepository.Repository
         /// True if collaborator is deleted else false
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<bool> DeleteCollaborator(CollaboratorsModel collabData)
+        public async Task<bool> DeleteCollaborator(int collabId)
         {
             try
             {
-                var data = await this.context.Collaborators.SingleOrDefaultAsync(data => data.NoteId == collabData.NoteId && data.CollabEmail == collabData.CollabEmail);
+                var data = await this.context.Collaborators.SingleOrDefaultAsync(data => data.CollabId == collabId);
                 if (data != null)
                 {
                     this.context.Collaborators.Remove(data);

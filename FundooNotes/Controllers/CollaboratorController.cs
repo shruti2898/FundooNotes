@@ -18,6 +18,9 @@ namespace FundooNotes.Controllers
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
+   
     public class CollaboratorController : ControllerBase
     {
         /// <summary>
@@ -44,7 +47,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpPost]
-        [Route("api/addCollab")]
+        [Route("addCollab")]
         public async Task<IActionResult> AddCollaborator([FromBody] CollaboratorsModel collabDetails)
         {
             try
@@ -61,7 +64,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -75,12 +78,12 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpDelete]
-        [Route("api/deleteCollab")]
-        public async Task<IActionResult> DeleteCollaborator([FromBody] CollaboratorsModel collabDetails)
+        [Route("deleteCollab/{collabId}")]
+        public async Task<IActionResult> DeleteCollaborator(int collabId)
         {
             try
             {
-                var result = await this.collabManager.DeleteCollaborator(collabDetails);
+                var result = await this.collabManager.DeleteCollaborator(collabId);
                 if (result)
                 {
                     return this.Ok(new { Status = true, Message = "Collaborator Removed Successfully" });
@@ -92,7 +95,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
 
@@ -106,7 +109,7 @@ namespace FundooNotes.Controllers
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
         [HttpGet]
-        [Route("api/allCollabs")]
+        [Route("{noteId}")]
         public async Task<IActionResult> GetAllCollaborators(int noteId)
         {
             try
@@ -123,7 +126,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.NotFound(new { Status = false, e.Message });
             }
         }
     }

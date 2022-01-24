@@ -27,7 +27,7 @@ namespace FundooRepository.Interface
         /// </summary>
         /// <param name="collabData">The collaborator data.</param>
         /// <returns>True if collaborator is deleted else false</returns>
-        Task<bool> DeleteCollaborator(CollaboratorsModel collabData);
+        Task<bool> DeleteCollaborator(int collabId);
 
         /// <summary>
         /// Gets all collaborators.
