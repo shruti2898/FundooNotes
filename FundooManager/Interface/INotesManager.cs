@@ -43,7 +43,7 @@ namespace FundooManager.Interface
         /// <param name="noteId">The note identifier.</param>
         /// <param name="color">The color.</param>
         /// <returns>Note data after changing the note color</returns>
-        Task<NotesModel> ChangeColor(int noteId, string color);
+        Task<NotesModel> ChangeColor(int noteId, NotesModel noteData);
 
         /// <summary>
         /// Adds to bin.
@@ -121,7 +121,7 @@ namespace FundooManager.Interface
         /// <param name="noteId">The note identifier.</param>
         /// <param name="reminder">The reminder.</param>
         /// <returns>Note data after adding reminder on note</returns>
-        Task<NotesModel> Reminder(int noteId, string reminder);
+        Task<NotesModel> Reminder(int noteId, NotesModel noteData);
 
         /// <summary>
         /// Deletes the reminder.
@@ -151,5 +151,6 @@ namespace FundooManager.Interface
         /// <param name="noteId">The note identifier.</param>
         /// <returns>Note data after deleting image from the note</returns>
         Task<NotesModel> DeleteImage(int noteId);
+        Task<bool> EmptyBin(int userID);
     }
 }

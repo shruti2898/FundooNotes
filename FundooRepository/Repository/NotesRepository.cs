@@ -71,7 +71,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -90,17 +90,11 @@ namespace FundooRepository.Repository
             try
             {
                 NotesModel result = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteData.NotesId);
-                bool checkNullVaules = noteData.NoteTitle == null && noteData.NoteDescription == null && noteData.NoteReminder == null && noteData.AddImage == null;
+                bool checkNullVaules = noteData.NoteTitle == null && noteData.NoteDescription == null;
                 if (result != null && !checkNullVaules)
                 {
                     result.NoteTitle = noteData.NoteTitle;
                     result.NoteDescription = noteData.NoteDescription;
-                    result.NoteReminder = noteData.NoteReminder;
-                    result.NoteColor = noteData.NoteColor;
-                    result.AddImage = noteData.AddImage;
-                    result.ArchiveNote = noteData.ArchiveNote;
-                    result.DeleteNote = noteData.DeleteNote;
-                    result.PinNote = noteData.PinNote;
                     this.context.Notes.Update(result);
                     await this.context.SaveChangesAsync();
                     return result;
@@ -108,7 +102,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -123,22 +117,22 @@ namespace FundooRepository.Repository
         /// Note data after changing the note color
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<NotesModel> ChangeColor(int noteId, string color)
+        public async Task<NotesModel> ChangeColor(int noteId,NotesModel noteData)
         {
             try
             {
-                var noteData = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteId);
-                if (noteData != null && color != null)
+                var data = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteId);
+                if (data != null)
                 {
-                    noteData.NoteColor = color;
-                    this.context.Notes.Update(noteData);
+                    data.NoteColor = noteData.NoteColor;
+                    this.context.Notes.Update(data);
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -169,7 +163,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -198,7 +192,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -226,7 +220,27 @@ namespace FundooRepository.Repository
 
                 return false;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> EmptyBin(int userID)
+        {
+            try
+            {
+                var notes = this.context.Notes.Where(data => data.UserId == userID && data.DeleteNote).ToList();
+                if (notes.Count > 0)
+                {
+                    this.context.Notes.RemoveRange(notes);
+                    await this.context.SaveChangesAsync();
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -256,7 +270,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -286,7 +300,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -316,7 +330,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -346,7 +360,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -372,7 +386,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -398,7 +412,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -424,7 +438,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -450,7 +464,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -465,22 +479,22 @@ namespace FundooRepository.Repository
         /// Note data after adding reminder on note
         /// </returns>
         /// <exception cref="System.Exception">Throws exception message</exception>
-        public async Task<NotesModel> Reminder(int noteId, string reminder)
+        public async Task<NotesModel> Reminder(int noteId, NotesModel noteData)
         {
             try
             {
-                var noteData = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteId);
-                if (noteData != null)
+                var result = await this.context.Notes.SingleOrDefaultAsync(data => data.NotesId == noteId);
+                if (result != null)
                 {
-                    noteData.NoteReminder = reminder;
-                    this.context.Notes.Update(noteData);
+                    result.NoteReminder = noteData.NoteReminder;
+                    this.context.Notes.Update(result);
                     await this.context.SaveChangesAsync();
                     return noteData;
                 }
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -509,7 +523,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -535,7 +549,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -575,7 +589,7 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -604,10 +618,12 @@ namespace FundooRepository.Repository
 
                 return null;
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
+      
     }
 }

@@ -8,6 +8,7 @@ namespace FundooNotes.Controllers
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using FundooManager.Interface;
     using FundooModels;
@@ -20,6 +21,8 @@ namespace FundooNotes.Controllers
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
     public class NotesController : ControllerBase
     {
         /// <summary>
@@ -44,13 +47,13 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is added successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPost]
-        [Route("api/addNotes")]
         public async Task<IActionResult> AddNotes([FromBody] NotesModel noteData)
         {
             try
             {
+                noteData.UserId = Convert.ToInt32(User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value);
                 NotesModel data = await this.notesManager.AddNotes(noteData);
                 if (data != null)
                 {
@@ -63,7 +66,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.BadRequest(new { Status = false, e.Message });
             }
         }
 
@@ -75,13 +78,13 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is updated successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/update")]
         public async Task<IActionResult> UpdateNotes([FromBody] NotesModel noteData)
         {
             try
             {
+                noteData.UserId = Convert.ToInt32(User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value);
                 NotesModel data = await this.notesManager.UpdateNotes(noteData);
                 if (data != null)
                 {
@@ -94,7 +97,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception e)
             {
-                return this.NotFound(new { Status = true, e.Message });
+                return this.BadRequest(new { Status = false, e.Message });
             }
         }
 
@@ -107,17 +110,23 @@ namespace FundooNotes.Controllers
         /// Ok object result if note color is changed successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/changeColor")]
-        public async Task<IActionResult> ChangeColor(int noteId, string color)
+        [Route("{noteId}/color")]
+        public async Task<IActionResult> ChangeColor(int noteId,[FromBody] NotesModel noteData)
         {
             try
             {
-                NotesModel data = await this.notesManager.ChangeColor(noteId, color);
+                noteData.UserId = Convert.ToInt32(User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value);
+                NotesModel data = await this.notesManager.ChangeColor(noteId,noteData);  
                 if (data != null)
                 {
-                    return this.Ok(new ResponseModel<NotesModel> { Status = true, Message = "Color changed successfully", Data = data });
+                    var result = new
+                    {
+                        noteId = data.NotesId,
+                        noteColor = data.NoteColor
+                    };
+                    return this.Ok(new { Status = true, Message = "Color changed successfully", Data = data });
                 }
                 else
                 {
@@ -126,7 +135,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -138,9 +147,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is added to bin successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/addToBin")]
+        [Route("{noteId}/remove")]
         public async Task<IActionResult> AddToBin(int noteId)
         {
             try
@@ -157,7 +166,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -169,9 +178,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is restored from bin successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/restore")]
+        [Route("{noteId}/restore")]
         public async Task<IActionResult> RestoreNote(int noteId)
         {
             try
@@ -188,7 +197,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -200,9 +209,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is deleted successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpDelete]
-        [Route("api/delete")]
+        [Route("{noteId}/delete")]
         public async Task<IActionResult> DeleteNoteForever(int noteId)
         {
             try
@@ -219,7 +228,30 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        [Route("empty")]
+        public async Task<IActionResult> EmptyBin()
+        {
+            try
+            {
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                bool result = await this.notesManager.EmptyBin(Convert.ToInt32(userID));
+                if (result)
+                {
+                    return this.Ok(new { Status = true, Message = $"Deleted all notes from bin successfully"});
+                }
+                else
+                {
+                    return this.BadRequest(new { Status = false, Message = "No data found in our system" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -231,9 +263,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is pinned successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/pin")]
+        [Route("{noteId}/pin")]
         public async Task<IActionResult> PinNote(int noteId)
         {
             try
@@ -250,7 +282,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -262,9 +294,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is unpinned successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/unpin")]
+        [Route("{noteId}/unpin")]
         public async Task<IActionResult> UnPinNote(int noteId)
         {
             try
@@ -281,7 +313,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -293,9 +325,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is archived successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/archive")]
+        [Route("{noteId}/archive")]
         public async Task<IActionResult> ArchiveNote(int noteId)
         {
             try
@@ -312,7 +344,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -324,9 +356,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if note is removed from archives successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/unarchive")]
+        [Route("{noteId}/unarchive")]
         public async Task<IActionResult> UnArchiveNote(int noteId)
         {
             try
@@ -343,7 +375,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -355,14 +387,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if all notes are retrieved successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpGet]
-        [Route("api/allNotes")]
-        public async Task<IActionResult> GetAllNotes(int userID)
+        [Route("all")]
+        public async Task<IActionResult> GetAllNotes()
         {
             try
-            {
-                var result = await this.notesManager.GetAllNotes(userID);
+            {   
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                var result = await this.notesManager.GetAllNotes(Convert.ToInt32(userID));
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = $"Retrieved all notes successfully for UserID - {userID}", Data = result });
@@ -374,7 +407,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -386,14 +419,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if all archived notes are retrieved successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpGet]
-        [Route("api/allArchives")]
-        public async Task<IActionResult> GetAllArchives(int userID)
+        [Route("archives")]
+        public async Task<IActionResult> GetAllArchives()
         {
             try
             {
-                var result = await this.notesManager.GetAllArchives(userID);
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                var result = await this.notesManager.GetAllArchives(Convert.ToInt32(userID));
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = $"Retrieved all archived notes successfully for UserID - {userID}", Data = result });
@@ -405,7 +439,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -417,14 +451,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if all bin notes are retrieved successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpGet]
-        [Route("api/allBinNotes")]
-        public async Task<IActionResult> GetAllBinNotes(int userID)
+        [Route("trash")]
+        public async Task<IActionResult> GetAllBinNotes()
         {
             try
             {
-                var result = await this.notesManager.GetAllBinNotes(userID);
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                var result = await this.notesManager.GetAllBinNotes(Convert.ToInt32(userID));
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = $"Retrieved all bin notes successfully for UserID - {userID}", Data = result });
@@ -436,9 +471,11 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
+
+       
 
         /// <summary>
         /// Gets all pin notes.
@@ -448,14 +485,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if all pin notes are retrieved successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpGet]
-        [Route("api/allPinNotes")]
-        public async Task<IActionResult> GetAllPinNotes(int userID)
+        [Route("pin")]
+        public async Task<IActionResult> GetAllPinNotes()
         {
             try
             {
-                var result = await this.notesManager.GetAllPinNotes(userID);
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                var result = await this.notesManager.GetAllPinNotes(Convert.ToInt32(userID));
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = $"Retrieved all pinned notes successfully for UserID - {userID}", Data = result });
@@ -467,7 +505,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -480,14 +518,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if reminder is added on note successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/reminder")]
-        public async Task<IActionResult> Reminder(int noteId, string reminder)
+        [Route("{noteId}/reminder")]
+        public async Task<IActionResult> Reminder(int noteId,[FromBody] NotesModel noteData)
         {
             try
             {
-                NotesModel result = await this.notesManager.Reminder(noteId, reminder);
+                noteData.UserId = Convert.ToInt32(User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value);
+                NotesModel result = await this.notesManager.Reminder(noteId, noteData);
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<NotesModel> { Status = true, Message = "Reminder added successfully", Data = result });
@@ -499,7 +538,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -511,9 +550,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if reminder is removed from note successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/deleteReminder")]
+        [Route("{noteId}/removeReminder")]
         public async Task<IActionResult> DeleteReminder(int noteId)
         {
             try
@@ -530,7 +569,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -542,14 +581,15 @@ namespace FundooNotes.Controllers
         /// Ok object result if all notes with reminder are retrieved successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpGet]
-        [Route("api/allReminders")]
-        public async Task<IActionResult> GetAllReminders(int userID)
+        [Route("reminders")]
+        public async Task<IActionResult> GetAllReminders()
         {
             try
             {
-                var result = await this.notesManager.GetAllReminders(userID);
+                var userID = User.Claims.FirstOrDefault(claim => claim.Type == "UserId").Value;
+                var result = await this.notesManager.GetAllReminders(Convert.ToInt32(userID));
                 if (result != null)
                 {
                     return this.Ok(new ResponseModel<IEnumerable<NotesModel>> { Status = true, Message = $"Retrieved all reminders successfully for UserID - {userID}", Data = result });
@@ -561,7 +601,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -574,9 +614,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if image is added on note successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/addImage")]
+        [Route("{noteId}/image")]
         public async Task<IActionResult> AddImage(int noteId, IFormFile image)
         {
             try
@@ -593,7 +633,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
 
@@ -605,9 +645,9 @@ namespace FundooNotes.Controllers
         /// Ok object result if image is deleted from successfully
         /// else bad request object result
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message as not found object result</exception>
+        /// <exception cref="System.Exception">Throws exception message as bad request object result</exception>
         [HttpPut]
-        [Route("api/deleteImage")]
+        [Route("{noteId}/deleteImage")]
         public async Task<IActionResult> DeleteImage(int noteId)
         {
             try
@@ -624,7 +664,7 @@ namespace FundooNotes.Controllers
             }
             catch (Exception ex)
             {
-                return this.NotFound(new { Status = false, Message = ex.Message });
+                return this.BadRequest(new { Status = false, Message = ex.Message });
             }
         }
     }

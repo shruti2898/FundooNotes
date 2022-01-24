@@ -1,40 +1,41 @@
-using CloudinaryDotNet.Actions;
-using FundooManager.Interface;
-using FundooManager.Manager;
-using FundooRepository.Context;
-using FundooRepository.Interface;
-using FundooRepository.Repository;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="Startup.cs" company="Bridgelabz">
+//   Copyright © 2021 Company="BridgeLabz"
+// </copyright>
+// <creator name="Shruti Sablaniya"/>
+// ----------------------------------------------------------------------------------------------------------
 namespace FundooNotes
 {
+    using System;
+    using System.Text;
+    using FundooManager.Interface;
+    using FundooManager.Manager;
+    using FundooRepository.Context;
+    using FundooRepository.Interface;
+    using FundooRepository.Repository;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.IdentityModel.Tokens;
+    using Microsoft.OpenApi.Models;
+
     public class Startup
     {
-        public IConfiguration configuration { get;}
         public Startup(IConfiguration configuration)
         {
-            this.configuration = configuration;
+            this.Configuration = configuration;
         }
-        
+        public IConfiguration Configuration { get; }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddDbContextPool<UserContext>(options => options.UseSqlServer(this.configuration.GetConnectionString("DbConnection")));
-            services.AddTransient<IUserRepository,UserRepository>();
+            services.AddDbContextPool<UserContext>(options => options.UseSqlServer(this.Configuration.GetConnectionString("DbConnection")));
+            services.AddTransient<IUserRepository, UserRepository>();
             services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<INotesRepository, NotesRepository>();
             services.AddTransient<INotesManager, NotesManager>();
@@ -42,17 +43,22 @@ namespace FundooNotes
             services.AddTransient<ICollaboratorsManager, CollaboratorsManager>();
             services.AddTransient<ILabelRepository, LabelRepository>();
             services.AddTransient<ILabelManager, LabelManager>();
-
-            services.AddSession(options => {
+            services.AddCors(options => options.AddPolicy(name: "CorsPolicyAllHosts", builder =>
+            {
+                builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            }));
+            services.AddSession(options => 
+            {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
             });
             services.AddSwaggerGen(swagger =>
             {
                 swagger.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Version = "v1",
-                    Title = "Fundoo Notes",
-                    Description = "ASP.NET Core Web Application"
+                {       Version = "v1",
+                        Title = "Fundoo Notes",
+                        Description = "ASP.NET Core Web Application"
                 });
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {
@@ -67,15 +73,14 @@ namespace FundooNotes
                 {
                     {
                           new OpenApiSecurityScheme
-                            {
+                          {
                                 Reference = new OpenApiReference
                                 {
                                     Type = ReferenceType.SecurityScheme,
                                     Id = "Bearer"
                                 }
-                            },
+                          },
                             new string[] {}
-
                     }
                 });
             });
@@ -92,7 +97,7 @@ namespace FundooNotes
                     ValidateAudience = false,
                     ValidateLifetime = false,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["SecretJWT"])) //Configuration["JwtToken:SecretKey"]  
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.Configuration["SecretJWT"])) //Configuration["JwtToken:SecretKey"]  
                 };
             });
         }
@@ -104,6 +109,7 @@ namespace FundooNotes
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("CorsPolicyAllHosts");
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseSession();
@@ -115,7 +121,6 @@ namespace FundooNotes
                      name: "default",
                      pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-
             app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Fundoo Notes");
