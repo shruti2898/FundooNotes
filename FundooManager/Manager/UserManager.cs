@@ -40,21 +40,9 @@ namespace FundooManager.Manager
         /// <returns>
         /// User data after successful registration
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<RegisterModel> Register(RegisterModel user)
         {
-            try
-            {
-                return await this.repository.Register(user);
-            }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch(Exception ex)
-            {
-                throw ex;
-            }
+            return await this.repository.Register(user);
         }
 
         /// <summary>
@@ -62,23 +50,11 @@ namespace FundooManager.Manager
         /// </summary>
         /// <param name="loginUser">The login user.</param>
         /// <returns>
-        /// User data after logging in successfully
+        /// Jwt token string
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<string> Login(UserCredentialsModel loginUser)
         {
-            try
-            {
-                return await this.repository.Login(loginUser);
-            }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return await this.repository.Login(loginUser);
         }
 
         /// <summary>
@@ -86,23 +62,11 @@ namespace FundooManager.Manager
         /// </summary>
         /// <param name="userCredentials">The user credentials.</param>
         /// <returns>
-        /// True if password is changed successfully else false
+        /// True if password is changed successfully
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> ResetPassword(UserCredentialsModel userCredentials)
         {
-            try
-            {
-                return await this.repository.ResetPassword(userCredentials);
-            }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return await this.repository.ResetPassword(userCredentials);
         }
 
         /// <summary>
@@ -110,23 +74,11 @@ namespace FundooManager.Manager
         /// </summary>
         /// <param name="userEmail">The user email.</param>
         /// <returns>
-        /// True if password reset link is mailed successfully else false
+        /// True if password reset link is mailed successfully
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> ForgotPassword(string userEmail)
         {
-            try
-            {
-                return await this.repository.ForgotPassword(userEmail);
-            }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return await this.repository.ForgotPassword(userEmail);
         }
 
     }

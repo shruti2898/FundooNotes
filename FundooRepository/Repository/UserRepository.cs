@@ -16,12 +16,13 @@ namespace FundooRepository.Repository
     using FundooModels;
     using FundooRepository.Context;
     using FundooRepository.Interface;
-    using FundooRepository.CustomException;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.IdentityModel.Tokens;
     using StackExchange.Redis;
-    
+    using System.Collections.Generic;
+    using FundooRepository.CustomException;
+
     /// <summary>
     /// User Repository Class
     /// </summary>
@@ -59,30 +60,19 @@ namespace FundooRepository.Repository
         /// <returns>
         /// User data after successful registration
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<RegisterModel> Register(RegisterModel userDetails)
         {
-            try
+          
+            ArgumentValidator.Validate(userDetails);
+            var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
+            if (emailExist == null)
             {
-                ArgumentValidator.Validate(userDetails);
-                var emailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userDetails.Email));
-                if (emailExist == null)
-                {
-                    userDetails.Password = this.PasswordEncryption(userDetails.Password);
-                    this.context.Users.Add(userDetails);
-                    await this.context.SaveChangesAsync();
-                    return userDetails;
-                }
-                return null;
+                userDetails.Password = this.PasswordEncryption(userDetails.Password);
+                this.context.Users.Add(userDetails);
+                await this.context.SaveChangesAsync();
+                return userDetails;
             }
-            catch(CustomException ex)
-            {
-                throw ex;
-            }
-            catch(Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            throw new CustomExistingDataException("Email already exist");
         }
 
         /// <summary>
@@ -90,13 +80,10 @@ namespace FundooRepository.Repository
         /// </summary>
         /// <param name="userCredentials">The user credentials.</param>
         /// <returns>
-        /// User data after logging in successfully
+        /// Jwt token string
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<string> Login(UserCredentialsModel userCredentials)
         {
-            try 
-            { 
             ArgumentValidator.Validate(userCredentials);
             var userEmailExist = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
             if (userEmailExist != null)
@@ -115,17 +102,9 @@ namespace FundooRepository.Repository
                     string token = GenerateJwtToken(userDetails.Email, userDetails.UserId);
                     return token;
                 }
+                throw new CustomUnauthorizedException("Invalid credentials");
             }
-            return null; 
-            }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            throw new CustomNotFoundException("Email does not exist in our system");
         }
 
         /// <summary>
@@ -160,33 +139,21 @@ namespace FundooRepository.Repository
         /// </summary>
         /// <param name="userCredentials">The user credentials.</param>
         /// <returns>
-        /// True if password is changed successfully else false
+        /// True if password is changed successfully 
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> ResetPassword(UserCredentialsModel userCredentials)
         {   
-            try
+            ArgumentValidator.Validate(userCredentials);
+            var userInfo = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
+            if (userInfo != null)
             {
-                ArgumentValidator.Validate(userCredentials);
-                var userInfo = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userCredentials.UserEmail));
-                if (userInfo != null)
-                {
-                    userCredentials.UserPassword = this.PasswordEncryption(userCredentials.UserPassword);
-                    userInfo.Password = userCredentials.UserPassword;
-                    this.context.Users.Update(userInfo);
-                    await this.context.SaveChangesAsync();
-                    return true;
-                }
-                return false;
+                userCredentials.UserPassword = this.PasswordEncryption(userCredentials.UserPassword);
+                userInfo.Password = userCredentials.UserPassword;
+                this.context.Users.Update(userInfo);
+                await this.context.SaveChangesAsync();
+                return true;
             }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            throw new CustomNotFoundException("Email does not exist in our system");
         }
 
         /// <summary>
@@ -194,47 +161,34 @@ namespace FundooRepository.Repository
         /// </summary>
         /// <param name="userEmail">The user email.</param>
         /// <returns>
-        /// True if password reset link is mailed successfully else false
+        /// True if password reset link is mailed successfully
         /// </returns>
-        /// <exception cref="System.Exception">Throws exception message</exception>
         public async Task<bool> ForgotPassword(string userEmail)
         {
-            try
+            ArgumentValidator.Validate(userEmail);
+            var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userEmail));
+            if (userDetails != null)
             {
-                ArgumentValidator.Validate(userEmail);
-                var userDetails = await this.context.Users.SingleOrDefaultAsync(user => user.Email.Equals(userEmail));
-                if (userDetails != null)
-                {
-                    string userDisplayName = userDetails.FirstName + " " + userDetails.LastName;
-                    string smtpEmail = this.Configuration.GetValue<string>("Smtp:SmtpUsername");
-                    string smtpPassword = this.Configuration.GetValue<string>("Smtp:SmtpPassword");
-                    MailMessage sendEmail = new MailMessage();
+                string userDisplayName = userDetails.FirstName + " " + userDetails.LastName;
+                string smtpEmail = this.Configuration.GetValue<string>("Smtp:SmtpUsername");
+                string smtpPassword = this.Configuration.GetValue<string>("Smtp:SmtpPassword");
+                MailMessage sendEmail = new MailMessage();
 
-                    SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
+                SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
 
-                    sendEmail.From = new MailAddress(smtpEmail);
-                    sendEmail.To.Add(userEmail);
-                    sendEmail.Subject = "Reset your password";
-                    this.SendMSMQ(userDisplayName);
-                    sendEmail.Body = this.ReceiveMSMQ();
-                    smtpServer.Port = 587;
-                    smtpServer.Credentials = new System.Net.NetworkCredential(smtpEmail, smtpPassword);
-                    smtpServer.EnableSsl = true;
+                sendEmail.From = new MailAddress(smtpEmail);
+                sendEmail.To.Add(userEmail);
+                sendEmail.Subject = "Reset your password";
+                this.SendMSMQ(userDisplayName);
+                sendEmail.Body = this.ReceiveMSMQ();
+                smtpServer.Port = 587;
+                smtpServer.Credentials = new System.Net.NetworkCredential(smtpEmail, smtpPassword);
+                smtpServer.EnableSsl = true;
 
-                    await smtpServer.SendMailAsync(sendEmail);
-                    return true;
-                }
-
-                return false;
+                await smtpServer.SendMailAsync(sendEmail);
+                return true;
             }
-            catch (CustomException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            throw new CustomNotFoundException("Email does not exist in our system"); 
         }
 
         /// <summary>
@@ -244,7 +198,6 @@ namespace FundooRepository.Repository
         public void SendMSMQ(string userDisplayName)
         {
             MessageQueue messageQueue;
-
             if (MessageQueue.Exists(@".\Private$\Fundoo"))
             {
                 messageQueue = new MessageQueue(@".\Private$\Fundoo");
