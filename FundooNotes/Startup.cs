@@ -10,6 +10,7 @@ namespace FundooNotes
     using System.Text;
     using FundooManager.Interface;
     using FundooManager.Manager;
+    using FundooNotes.ExceptionMiddleware;
     using FundooRepository.Context;
     using FundooRepository.Interface;
     using FundooRepository.Repository;
@@ -35,6 +36,7 @@ namespace FundooNotes
         {
             services.AddMvc();
             services.AddDbContextPool<UserContext>(options => options.UseSqlServer(this.Configuration.GetConnectionString("DbConnection")));
+            services.AddTransient<CustomExceptionMiddleware>();
             services.AddTransient<IUserRepository, UserRepository>();
             services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<INotesRepository, NotesRepository>();
@@ -108,7 +110,7 @@ namespace FundooNotes
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseMiddleware<CustomExceptionMiddleware>();
             app.UseCors("CorsPolicyAllHosts");
             app.UseHttpsRedirection();
             app.UseRouting();
